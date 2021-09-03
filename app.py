@@ -2,6 +2,7 @@ import pygame
 import sys
 from player import *
 from appSettings import *
+from map import grid
 
 pygame.init()
 vec = pygame.math.Vector2
@@ -17,6 +18,8 @@ class App:
         self.load_images()
         self.grid_shape = (28, 31)
         self.cell_pixel_size = 20
+        self.grid = [[grid[j][i] for j in range(len(grid))] for i in range(len(grid[0]))]# T
+
         self.player = Player(self, START_POS, PLAYER_COLOR)
 
     def run(self):
@@ -121,6 +124,12 @@ class App:
             pygame.draw.line(self.screen, GRAY,
                              (0, i * self.cell_pixel_size),
                              (WIDTH_BACKGROUND, i * self.cell_pixel_size))
+        for i in range(self.grid_shape[0]):
+            for j in range(self.grid_shape[1]):
+                if self.grid[i][j] == 0:
+                    pygame.draw.rect(self.screen, RED,
+                                     pygame.Rect(i*self.cell_pixel_size, j*self.cell_pixel_size,
+                                                 self.cell_pixel_size, self.cell_pixel_size), 1)
 
     def draw_info(self):
         # screen split
