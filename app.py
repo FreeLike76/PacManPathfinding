@@ -19,11 +19,17 @@ class App:
                 self.start_events()
                 self.start_update()
                 self.start_draw()
+            elif self.state == "play":
+                self.play_events()
+                self.play_update()
+                self.play_draw()
+            else:
+                self.running = False
             self.clock.tick(FPS)
         pygame.quit()
         sys.exit()
 
-    # INTRO
+    # START MENU FUNCTIONS
 
     def start_events(self):
         for event in pygame.event.get():
@@ -39,6 +45,9 @@ class App:
         # background black
         self.screen.fill(BLACK)
         # menu
+        self.draw_text("HIGH SCORE",
+                       self.screen, [5, 0],
+                       MID_TEXT_SIZE, WHITE, DEFAULT_FONT, False)
         self.draw_text("PACMAN",
                        self.screen, [WIDTH // 2, HEIGHT // 2 - BIG_TEXT_SIZE * 2],
                        LOGO_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True)
@@ -51,6 +60,20 @@ class App:
         self.draw_text("PRESS SPACE TO PLAY",
                        self.screen, [WIDTH // 2, HEIGHT // 2 + BIG_TEXT_SIZE * 2 + MID_TEXT_SIZE],
                        BIG_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True)
+        pygame.display.update()
+
+    # PLAY FUNCTIONS
+
+    def play_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+
+    def play_update(self):
+        pass
+
+    def play_draw(self):
+        self.screen.fill(WHITE)
         pygame.display.update()
 
     # SUPPORT FUNCTIONS
