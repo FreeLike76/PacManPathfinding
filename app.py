@@ -39,8 +39,18 @@ class App:
         # background black
         self.screen.fill(BLACK)
         # menu
+        self.draw_text("PACMAN",
+                       self.screen, [WIDTH // 2, HEIGHT // 2 - BIG_TEXT_SIZE * 2],
+                       LOGO_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True)
+        self.draw_text("Dmytro Geleshko",
+                       self.screen, [WIDTH // 2, HEIGHT // 2],
+                       MID_TEXT_SIZE, MENU_BLUE, DEFAULT_FONT, True)
+        self.draw_text("IP-91",
+                       self.screen, [WIDTH // 2, HEIGHT // 2 + MID_TEXT_SIZE],
+                       MID_TEXT_SIZE, MENU_BLUE, DEFAULT_FONT, True)
         self.draw_text("PRESS SPACE TO PLAY",
-                       self.screen, [WIDTH//2, HEIGHT//2], BIG_TEXT_SIZE, ORANGE, DEFAULT_FONT, True)
+                       self.screen, [WIDTH // 2, HEIGHT // 2 + BIG_TEXT_SIZE * 2 + MID_TEXT_SIZE],
+                       BIG_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True)
         pygame.display.update()
 
     # SUPPORT FUNCTIONS
