@@ -1,6 +1,16 @@
-# resolution
+# RESOLUTION
 WIDTH = 620
 HEIGHT = 560
 
-# clock
+# CLOCK
 FPS = 60
+
+# COLORS
+BLACK = (0, 0, 0)
+ORANGE = (170, 140, 60)
+
+# TEXT SIZE
+BIG_TEXT_SIZE = 36
+
+# TEXT FONT
+DEFAULT_FONT = "impact"
