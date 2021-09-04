@@ -11,8 +11,8 @@ class Player:
         self.pix_pos = pygame.math.Vector2(self.grid_pos * self.app.cell_pixel_size)
         self.pix_pos.x += self.app.cell_pixel_size // 2
         self.pix_pos.y += self.app.cell_pixel_size // 2
-        self.direction = pygame.math.Vector2(1, 0)
-        self.stored_direction = pygame.math.Vector2(1, 0)
+        self.direction = pygame.math.Vector2(0, 0)
+        self.stored_direction = pygame.math.Vector2(0, 0)
 
         # other
         self.high_score = 0
@@ -37,8 +37,8 @@ class Player:
 
     def update(self):
         # if centered
-        if self.pix_pos.x % self.app.cell_pixel_size - self.app.cell_pixel_size // 2 == 0 \
-                and self.pix_pos.y % self.app.cell_pixel_size - self.app.cell_pixel_size // 2 == 0:
+        if self.pix_pos.x % self.app.cell_pixel_size == self.app.cell_pixel_size // 2 \
+                and self.pix_pos.y % self.app.cell_pixel_size == self.app.cell_pixel_size // 2:
             # if can change dir
             if self.app.can_move(self.grid_pos, self.stored_direction):
                 self.direction = self.stored_direction

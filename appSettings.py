@@ -31,3 +31,6 @@ SMALL_TEXT_SIZE = 24
 
 # TEXT FONT
 DEFAULT_FONT = "impact"
+
+# OTHER
+DEBUG = False

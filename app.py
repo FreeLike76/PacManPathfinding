@@ -18,8 +18,14 @@ class App:
         self.grid_shape = (28, 31)
         self.cell_pixel_size = 20
         self.grid = [[grid[j][i] for j in range(len(grid))] for i in range(len(grid[0]))]  # T
-
+        self.coins = [[1 if grid[j][i] == 1 else 0 for j in range(len(grid))] for i in range(len(grid[0]))]  # Coins map
         self.player = Player(self, START_POS, PLAYER_COLOR)
+
+        with open("score.txt", "r") as scoreboard:
+            for line in scoreboard:
+                num = int(line.strip())
+                if int(num) > self.player.high_score:
+                    self.player.high_score = int(num)
 
     def run(self):
         while self.running:
@@ -34,6 +40,8 @@ class App:
             else:
                 self.running = False
             self.clock.tick(FPS)
+        with open("score.txt", "a") as scoreboard:
+            scoreboard.write(str(self.player.cur_score) + "\n")
         pygame.quit()
         sys.exit()
 
@@ -86,15 +94,18 @@ class App:
                     self.player.move(pygame.math.Vector2(0, 1))
 
     def play_update(self):
+        self.on_coin()
         self.player.update()
 
     def play_draw(self):
         self.screen.fill(BLACK)
         self.screen.blit(self.image_background, (0, 0))
-        self.draw_grid()
+        self.draw_coins()
         self.draw_info()
         self.player.draw()
-        self.player.draw_grid()
+        if DEBUG:
+            self.draw_grid()
+            self.player.draw_grid()
         pygame.display.update()
 
     # SUPPORT FUNCTIONS
@@ -103,6 +114,20 @@ class App:
         if self.grid[int(pos[0] + direction[0])][int(pos[1] + direction[1])] == 0:
             return False
         return True
+
+    def draw_coins(self):
+        for i in range(self.grid_shape[0]):
+            for j in range(self.grid_shape[1]):
+                if self.coins[i][j] == 1:
+                    pygame.draw.circle(self.screen, MENU_ORANGE,
+                                       (i * self.cell_pixel_size + self.cell_pixel_size // 2,
+                                        j * self.cell_pixel_size + self.cell_pixel_size // 2),
+                                       self.cell_pixel_size // 5)
+
+    def on_coin(self):
+        if self.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] == 1:
+            self.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] = 0
+            self.player.cur_score += 10
 
     def load_images(self):
         self.image_background = pygame.image.load("images/background.png")
