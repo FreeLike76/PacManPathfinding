@@ -12,6 +12,7 @@ class Player:
         self.pix_pos.x += self.app.cell_pixel_size // 2
         self.pix_pos.y += self.app.cell_pixel_size // 2
         self.direction = pygame.math.Vector2(1, 0)
+        self.stored_direction = pygame.math.Vector2(1, 0)
 
         # other
         self.high_score = 0
@@ -21,7 +22,7 @@ class Player:
     def draw(self):
         pygame.draw.circle(self.app.screen, self.color,
                            self.pix_pos,
-                           self.app.cell_pixel_size // 2)
+                           int(self.app.cell_pixel_size * 0.4))
 
     def draw_grid(self):
         # grid for debugging
@@ -32,9 +33,19 @@ class Player:
 
     def move(self, new_direction):
         # direction update on player's input
-        self.direction = new_direction
+        self.stored_direction = new_direction
 
     def update(self):
+        # if centered
+        if self.pix_pos.x % self.app.cell_pixel_size - self.app.cell_pixel_size // 2 == 0 \
+                and self.pix_pos.y % self.app.cell_pixel_size - self.app.cell_pixel_size // 2 == 0:
+            # if can change dir
+            if self.app.can_move(self.grid_pos, self.stored_direction):
+                self.direction = self.stored_direction
+            # if can't move
+            elif not self.app.can_move(self.grid_pos, self.direction):
+                self.direction = pygame.math.Vector2(0, 0)
+
         # update grid position using pixel position (for smooth movements)
         self.pix_pos += self.direction
         self.grid_pos = self.pix_pos // self.app.cell_pixel_size

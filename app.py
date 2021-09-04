@@ -5,7 +5,6 @@ from appSettings import *
 from map import grid
 
 pygame.init()
-vec = pygame.math.Vector2
 
 
 class App:
@@ -18,7 +17,7 @@ class App:
         self.load_images()
         self.grid_shape = (28, 31)
         self.cell_pixel_size = 20
-        self.grid = [[grid[j][i] for j in range(len(grid))] for i in range(len(grid[0]))]# T
+        self.grid = [[grid[j][i] for j in range(len(grid))] for i in range(len(grid[0]))]  # T
 
         self.player = Player(self, START_POS, PLAYER_COLOR)
 
@@ -100,6 +99,11 @@ class App:
 
     # SUPPORT FUNCTIONS
 
+    def can_move(self, pos, direction):
+        if self.grid[int(pos[0] + direction[0])][int(pos[1] + direction[1])] == 0:
+            return False
+        return True
+
     def load_images(self):
         self.image_background = pygame.image.load("images/background.png")
 
@@ -128,7 +132,7 @@ class App:
             for j in range(self.grid_shape[1]):
                 if self.grid[i][j] == 0:
                     pygame.draw.rect(self.screen, RED,
-                                     pygame.Rect(i*self.cell_pixel_size, j*self.cell_pixel_size,
+                                     pygame.Rect(i * self.cell_pixel_size, j * self.cell_pixel_size,
                                                  self.cell_pixel_size, self.cell_pixel_size), 1)
 
     def draw_info(self):
@@ -157,11 +161,11 @@ class App:
         # cur score
         self.draw_text("CURRENT SCORE",
                        self.screen,
-                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE*3],
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 3],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
         self.draw_text(str(self.player.cur_score),
                        self.screen,
-                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE*4],
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 4],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
         # lives
@@ -169,4 +173,3 @@ class App:
         # type of search
 
         # time of search
-
