@@ -11,16 +11,24 @@ class App:
     def __init__(self):
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.clock = pygame.time.Clock()
+
+        # state
         self.running = True
         self.state = "start"
 
+        # images
         self.load_images()
+
+        # map
         self.grid_shape = (28, 31)
         self.cell_pixel_size = 20
         self.grid = [[grid[j][i] for j in range(len(grid))] for i in range(len(grid[0]))]  # T
         self.coins = [[1 if grid[j][i] == 1 else 0 for j in range(len(grid))] for i in range(len(grid[0]))]  # Coins map
-        self.player = Player(self, START_POS, PLAYER_COLOR)
 
+        # entities
+        self.player = Player(self, START_POS, PLAYER_COLOR, PLAYER_LIVES)
+
+        # score
         with open("score.txt", "r") as scoreboard:
             for line in scoreboard:
                 num = int(line.strip())
@@ -92,8 +100,12 @@ class App:
                     self.player.move(pygame.math.Vector2(0, -1))
                 if event.key == pygame.K_DOWN:
                     self.player.move(pygame.math.Vector2(0, 1))
+                if event.key == pygame.K_ESCAPE:
+                    self.player.lives -= 1
 
     def play_update(self):
+        if self.player.lives == 0:
+            self.running = False
         self.on_coin()
         self.player.update()
 
@@ -194,6 +206,14 @@ class App:
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
         # lives
+        self.draw_text("LIVES",
+                       self.screen,
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 6],
+                       MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
+        self.draw_text(str(self.player.lives),
+                       self.screen,
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 7],
+                       MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
         # type of search
 

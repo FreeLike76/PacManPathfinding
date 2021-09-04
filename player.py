@@ -2,7 +2,7 @@ import pygame
 
 
 class Player:
-    def __init__(self, app, pos, color):
+    def __init__(self, app, pos, color, lives):
         # app
         self.app = app
 
@@ -15,6 +15,7 @@ class Player:
         self.stored_direction = pygame.math.Vector2(0, 0)
 
         # other
+        self.lives = lives
         self.high_score = 0
         self.cur_score = 0
         self.color = color
