@@ -39,12 +39,14 @@ class App:
         while self.running:
             if self.state == "start":
                 self.start_events()
-                self.start_update()
                 self.start_draw()
             elif self.state == "play":
                 self.play_events()
                 self.play_update()
                 self.play_draw()
+            elif self.state == "end":
+                self.end_events()
+                self.end_draw()
             else:
                 self.running = False
             self.clock.tick(FPS)
@@ -61,9 +63,6 @@ class App:
                 self.running = False
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 self.state = "play"
-
-    def start_update(self):
-        pass
 
     def start_draw(self):
         # fill background
@@ -105,9 +104,10 @@ class App:
 
     def play_update(self):
         if self.player.lives == 0:
-            self.running = False
-        self.on_coin()
-        self.player.update()
+            self.state = "end"
+        else:
+            self.on_coin()
+            self.player.update()
 
     def play_draw(self):
         self.screen.fill(BLACK)
@@ -118,6 +118,25 @@ class App:
         if DEBUG:
             self.draw_grid()
             self.player.draw_grid()
+        pygame.display.update()
+
+    # END FUNCTIONS
+
+    def end_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT \
+                    or event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                self.running = False
+
+    def end_draw(self):
+        self.screen.fill(BLACK)
+        self.draw_text("YOU DIED",
+                       self.screen, [WIDTH_BACKGROUND // 2, HEIGHT // 2 - LOGO_TEXT_SIZE],
+                       LOGO_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
+        self.draw_text("PRESS SPACE TO CLOSE",
+                       self.screen, [WIDTH_BACKGROUND // 2, HEIGHT // 2 + BIG_TEXT_SIZE * 2],
+                       BIG_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
+        self.draw_info()
         pygame.display.update()
 
     # SUPPORT FUNCTIONS
