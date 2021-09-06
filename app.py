@@ -1,5 +1,6 @@
 import pygame
 import sys
+from search.searchTree import *
 from player import *
 from appSettings import *
 from map import grid
@@ -237,3 +238,46 @@ class App:
         # type of search
 
         # time of search
+
+    # SEARCH
+
+    def bfs(self, start, end):
+        frontier = [start]
+        explored = []
+
+        while True:
+            if len(frontier) == 0:
+                return []
+
+            cur = frontier.pop()
+            explored.append(cur)
+
+            if self.grid[int(cur[0] - 1)][int(cur[1])] == 1:
+                frontier.append(pygame.math.Vector2(int(cur[0] - 1), int(cur[1])))
+            if self.grid[int(cur[0] + 1)][int(cur[1])] == 1:
+                frontier.append(pygame.math.Vector2(int(cur[0] + 1), int(cur[1])))
+            if self.grid[int(cur[0])][int(cur[1] - 1)] == 1:
+                frontier.append(pygame.math.Vector2(int(cur[0]), int(cur[1] - 1)))
+            if self.grid[int(cur[0])][int(cur[1] + 1)] == 1:
+                frontier.append(pygame.math.Vector2(int(cur[0]), int(cur[1] + 1)))
+
+    def dfs(self, start, end):
+        tree = SearchTree(start, end)
+        self._dfs(tree, tree.root, [], [])
+        return tree.path
+
+    def _dfs(self, tree, cur, path_hist, node_hist):
+        node_hist.append(cur.pos)
+        # if found end pos check whether the path is shorter.
+        if cur.pos == tree.end_pos:
+            if len(tree.path) == 0 or len(tree.path) > len(path_hist):
+                tree.path = path_hist.copy()
+        # else continue searching
+        else:
+            for direction in tree.directions:
+                # if can_move and not visited => start _dfs from new pos
+                if self.can_move(cur.pos, direction) and cur.pos + direction not in node_hist:
+                    self._dfs(tree,
+                              Node(cur.pos + direction),
+                              path_hist.copy().append(direction),
+                              node_hist.copy())
