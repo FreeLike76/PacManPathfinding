@@ -1,5 +1,6 @@
 import pygame
 import sys
+import time
 from search.searchTree import *
 from player import *
 from appSettings import *
@@ -29,7 +30,9 @@ class App:
         # entities
         self.player = Player(self, START_POS, PLAYER_COLOR, PLAYER_LIVES)
 
-        # end pos for autopilot search
+        # autopilot search
+        self.search_type = "dfs"
+        self.search_time = 0
         self.end_pos_from_mouse = pygame.math.Vector2(0, 0)
 
         # score
@@ -243,14 +246,45 @@ class App:
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
         # type of search
+        self.draw_text("SEARCH",
+                       self.screen,
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 9],
+                       MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
+        self.draw_text("DFS",
+                       self.screen,
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 10],
+                       MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
         # time of search
+        self.draw_text("SEARCH TIME",
+                       self.screen,
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 12],
+                       MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
+        self.draw_text(str(self.search_time),
+                       self.screen,
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 13],
+                       MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
     def get_end_pos_from_mouse(self):
         x, y = pygame.mouse.get_pos()
         self.end_pos_from_mouse = pygame.math.Vector2(x // self.cell_pixel_size, y // self.cell_pixel_size)
 
     # SEARCH
+
+    def search(self, start, end):
+        time_start = time.time()
+
+        if self.search_type == "dfs":
+            path = self.dfs(start, end)
+        elif self.search_type == "bfs":
+            path = self.dfs(start, end)
+        else:
+            path = self.dfs(start, end)
+
+        time_end = time.time()
+        self.search_time = time_end - time_start
+
+        return path
 
     def bfs(self, start, end):
         frontier = [start]

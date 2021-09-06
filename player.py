@@ -52,7 +52,7 @@ class Player:
                 # if path was not found yet
                 if not self.autopilot_has_path:
                     # find path
-                    self.autopilot_direction = self.app.dfs(self.grid_pos, self.app.end_pos_from_mouse)
+                    self.autopilot_direction = self.app.search(self.grid_pos, self.app.end_pos_from_mouse)
                     self.autopilot_has_path = True
                 # follow the path
                 if len(self.autopilot_direction) > 0:
