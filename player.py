@@ -5,6 +5,8 @@ class Player:
     def __init__(self, app, pos, color, lives):
         # app
         self.app = app
+
+        # autopilot
         self.autopilot = False
         self.autopilot_has_path = False
         self.autopilot_direction = []

@@ -109,9 +109,9 @@ class App:
                 if event.key == pygame.K_ESCAPE:
                     self.player.lives -= 1
             if event.type == pygame.MOUSEBUTTONUP:
-                self.get_end_pos_from_mouse()
-                self.player.autopilot = True
-                self.player.autopilot_has_path = False
+                if self.get_end_pos_from_mouse():
+                    self.player.autopilot = True
+                    self.player.autopilot_has_path = False
 
     def play_update(self):
         if self.player.lives == 0:
@@ -260,14 +260,20 @@ class App:
                        self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 12],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
-        self.draw_text(str(self.search_time),
+        self.draw_text("{:.2f}ms".format(round(self.search_time*1000, 2)),
                        self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 13],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
     def get_end_pos_from_mouse(self):
         x, y = pygame.mouse.get_pos()
-        self.end_pos_from_mouse = pygame.math.Vector2(x // self.cell_pixel_size, y // self.cell_pixel_size)
+        x = x // self.cell_pixel_size
+        y = y // self.cell_pixel_size
+        if self.grid[x][y] == 1:
+            self.end_pos_from_mouse = pygame.math.Vector2(x, y)
+            return True
+        return False
+
 
     # SEARCH
 
@@ -316,11 +322,15 @@ class App:
         node_hist.append(cur.pos)
         # if we are further from start_pos then shortest path => return
         if len(tree.path) != 0 and len(tree.path) <= len(path_hist):
+            if DEBUG:
+                print("dfs: pruned")
             return
         # if found end pos check whether the path is shorter.
         if cur.pos == tree.end_pos:
             if len(tree.path) == 0 or len(tree.path) > len(path_hist):
                 tree.path = path_hist.copy()
+                if DEBUG:
+                    print("dfs: found path\n", tree.path)
         # else continue searching
         else:
             for direction in tree.directions:
