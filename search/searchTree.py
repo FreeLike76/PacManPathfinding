@@ -1,4 +1,4 @@
-from node import *
+from search.node import *
 from pygame.math import Vector2
 
 

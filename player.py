@@ -5,6 +5,9 @@ class Player:
     def __init__(self, app, pos, color, lives):
         # app
         self.app = app
+        self.autopilot = False
+        self.autopilot_has_path = False
+        self.autopilot_direction = []
 
         # coords
         self.grid_pos = pygame.math.Vector2(pos)
@@ -35,11 +38,30 @@ class Player:
     def move(self, new_direction):
         # direction update on player's input
         self.stored_direction = new_direction
+        self.autopilot = False
+        self.autopilot_has_path = False
 
     def update(self):
         # if centered
         if self.pix_pos.x % self.app.cell_pixel_size == self.app.cell_pixel_size // 2 \
                 and self.pix_pos.y % self.app.cell_pixel_size == self.app.cell_pixel_size // 2:
+            # if autopilot is enabled
+            if self.autopilot:
+                self.direction = pygame.math.Vector2(0, 0)
+                self.stored_direction = pygame.math.Vector2(0, 0)
+                # if path was not found yet
+                if not self.autopilot_has_path:
+                    # find path
+                    self.autopilot_direction = self.app.dfs(self.grid_pos, self.app.end_pos_from_mouse)
+                    self.autopilot_has_path = True
+                # follow the path
+                if len(self.autopilot_direction) > 0:
+                    self.stored_direction = self.autopilot_direction.pop(0)
+                # if destination is reached stop autopilot
+                else:
+                    self.autopilot = False
+                    self.autopilot_has_path = False
+                    self.stored_direction = pygame.math.Vector2(0, 0)
             # if can change dir
             if self.app.can_move(self.grid_pos, self.stored_direction):
                 self.direction = self.stored_direction

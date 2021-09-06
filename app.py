@@ -29,6 +29,9 @@ class App:
         # entities
         self.player = Player(self, START_POS, PLAYER_COLOR, PLAYER_LIVES)
 
+        # end pos for autopilot search
+        self.end_pos_from_mouse = pygame.math.Vector2(0, 0)
+
         # score
         with open("score.txt", "r") as scoreboard:
             for line in scoreboard:
@@ -102,6 +105,10 @@ class App:
                     self.player.move(pygame.math.Vector2(0, 1))
                 if event.key == pygame.K_ESCAPE:
                     self.player.lives -= 1
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.get_end_pos_from_mouse()
+                self.player.autopilot = True
+                self.player.autopilot_has_path = False
 
     def play_update(self):
         if self.player.lives == 0:
@@ -239,6 +246,10 @@ class App:
 
         # time of search
 
+    def get_end_pos_from_mouse(self):
+        x, y = pygame.mouse.get_pos()
+        self.end_pos_from_mouse = pygame.math.Vector2(x // self.cell_pixel_size, y // self.cell_pixel_size)
+
     # SEARCH
 
     def bfs(self, start, end):
@@ -267,7 +278,11 @@ class App:
         return tree.path
 
     def _dfs(self, tree, cur, path_hist, node_hist):
+        # flag as visited
         node_hist.append(cur.pos)
+        # if we are further from start_pos then shortest path => return
+        if len(tree.path) != 0 and len(tree.path) <= len(path_hist):
+            return
         # if found end pos check whether the path is shorter.
         if cur.pos == tree.end_pos:
             if len(tree.path) == 0 or len(tree.path) > len(path_hist):
@@ -277,7 +292,9 @@ class App:
             for direction in tree.directions:
                 # if can_move and not visited => start _dfs from new pos
                 if self.can_move(cur.pos, direction) and cur.pos + direction not in node_hist:
+                    path_hist_copy = path_hist.copy()
+                    path_hist_copy.append(direction)
                     self._dfs(tree,
                               Node(cur.pos + direction),
-                              path_hist.copy().append(direction),
+                              path_hist_copy,
                               node_hist.copy())
