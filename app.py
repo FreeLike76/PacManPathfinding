@@ -31,7 +31,7 @@ class App:
         self.player = Player(self, START_POS, PLAYER_COLOR, PLAYER_LIVES)
 
         # autopilot search
-        self.search_type = "dfs"
+        self.search_type = "bfs"
         self.search_time = 0
         self.end_pos_from_mouse = pygame.math.Vector2(0, 0)
 
@@ -108,6 +108,12 @@ class App:
                     self.player.move(pygame.math.Vector2(0, 1))
                 if event.key == pygame.K_ESCAPE:
                     self.player.lives -= 1
+                if event.key == pygame.K_s:
+                    if self.search_type == "dfs":
+                        self.search_type = "bfs"
+                    else:
+                        self.search_type = "dfs"
+
             if event.type == pygame.MOUSEBUTTONUP:
                 if self.get_end_pos_from_mouse():
                     self.player.autopilot = True
@@ -250,7 +256,7 @@ class App:
                        self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 9],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
-        self.draw_text("DFS",
+        self.draw_text(self.search_type,
                        self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 10],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
@@ -283,9 +289,9 @@ class App:
         if self.search_type == "dfs":
             path = self.dfs(start, end)
         elif self.search_type == "bfs":
-            path = self.dfs(start, end)
-        else:
-            path = self.dfs(start, end)
+            path = self.bfs(start, end)
+        #else:
+            #path = self.dfs(start, end)
 
         time_end = time.time()
         self.search_time = time_end - time_start
@@ -293,24 +299,33 @@ class App:
         return path
 
     def bfs(self, start, end):
-        frontier = [start]
+        tree = SearchTree(start, end)
+        frontier = [tree.root]
         explored = []
 
-        while True:
-            if len(frontier) == 0:
-                return []
-
-            cur = frontier.pop()
-            explored.append(cur)
-
-            if self.grid[int(cur[0] - 1)][int(cur[1])] == 1:
-                frontier.append(pygame.math.Vector2(int(cur[0] - 1), int(cur[1])))
-            if self.grid[int(cur[0] + 1)][int(cur[1])] == 1:
-                frontier.append(pygame.math.Vector2(int(cur[0] + 1), int(cur[1])))
-            if self.grid[int(cur[0])][int(cur[1] - 1)] == 1:
-                frontier.append(pygame.math.Vector2(int(cur[0]), int(cur[1] - 1)))
-            if self.grid[int(cur[0])][int(cur[1] + 1)] == 1:
-                frontier.append(pygame.math.Vector2(int(cur[0]), int(cur[1] + 1)))
+        while len(frontier) > 0:
+            cur = frontier.pop(0)
+            explored.append(cur.pos)
+            if cur.pos == tree.end_pos:
+                # creating temp ref and exec backpropagation until root is found
+                temp = cur
+                while temp.parent is not None:
+                    tree.path.append(temp.pos-temp.parent.pos)
+                    temp = temp.parent
+                break
+            else:
+                for direction in tree.directions:
+                    # if can_move and not visited => start _dfs from new pos
+                    if self.can_move(cur.pos, direction) and cur.pos + direction not in explored:
+                        # add child
+                        cur.nextPos.append(Node(cur.pos + direction))
+                        # ref to parent
+                        cur.nextPos[-1].parent = cur
+                        # add to frontier
+                        frontier.append(cur.nextPos[-1])
+        # returning reverse because path was found from end to start
+        tree.path.reverse()
+        return tree.path
 
     def dfs(self, start, end):
         tree = SearchTree(start, end)
@@ -338,7 +353,8 @@ class App:
                 if self.can_move(cur.pos, direction) and cur.pos + direction not in node_hist:
                     path_hist_copy = path_hist.copy()
                     path_hist_copy.append(direction)
+                    node_hist_copy = node_hist.copy()
                     self._dfs(tree,
                               Node(cur.pos + direction),
                               path_hist_copy,
-                              node_hist.copy())
+                              node_hist_copy)
