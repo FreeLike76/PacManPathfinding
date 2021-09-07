@@ -33,4 +33,4 @@ SMALL_TEXT_SIZE = 24
 DEFAULT_FONT = "impact"
 
 # OTHER
-DEBUG = True
+DEBUG = False

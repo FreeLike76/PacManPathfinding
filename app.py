@@ -316,7 +316,9 @@ class App:
             else:
                 for direction in tree.directions:
                     # if can_move and not visited => start _dfs from new pos
-                    if self.can_move(cur.pos, direction) and cur.pos + direction not in explored:
+                    if self.can_move(cur.pos, direction) \
+                            and cur.pos + direction not in explored \
+                            and not self._bfs_node_in_frontier(frontier, cur.pos + direction):
                         # add child
                         cur.nextPos.append(Node(cur.pos + direction))
                         # ref to parent
@@ -326,6 +328,12 @@ class App:
         # returning reverse because path was found from end to start
         tree.path.reverse()
         return tree.path
+
+    def _bfs_node_in_frontier(self, frontier, pos):
+        for node in frontier:
+            if node.pos == pos:
+                return True
+        return False
 
     def dfs(self, start, end):
         tree = SearchTree(start, end)
