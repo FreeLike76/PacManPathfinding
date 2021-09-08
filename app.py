@@ -10,7 +10,9 @@ pygame.init()
 
 
 class App:
+    """Game class"""
     def __init__(self):
+        """Game initialization"""
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.clock = pygame.time.Clock()
 
@@ -47,6 +49,7 @@ class App:
         self.transition_cost = TRANSITION_COST
 
     def run(self):
+        """Main game cycle"""
         while self.running:
             if self.state == "start":
                 self.start_events()
@@ -69,6 +72,7 @@ class App:
     # START MENU FUNCTIONS
 
     def start_events(self):
+        """Managing events during start menu"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -76,6 +80,7 @@ class App:
                 self.state = "play"
 
     def start_draw(self):
+        """Drawing the start menu"""
         # fill background
         self.screen.fill(BLACK)
 
@@ -98,6 +103,7 @@ class App:
     # PLAY FUNCTIONS
 
     def play_events(self):
+        """Managing events that happen during the game itself"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -126,6 +132,7 @@ class App:
                     self.player.autopilot_has_path = False
 
     def play_update(self):
+        """Updating game state"""
         if self.player.lives == 0:
             self.state = "end"
         else:
@@ -133,6 +140,7 @@ class App:
             self.player.update()
 
     def play_draw(self):
+        """Drawing the game"""
         self.screen.fill(BLACK)
         self.screen.blit(self.image_background, (0, 0))
         self.draw_coins()
@@ -146,12 +154,14 @@ class App:
     # END FUNCTIONS
 
     def end_events(self):
+        """Managing events during end screen"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT \
                     or event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 self.running = False
 
     def end_draw(self):
+        """Drawing the end screen"""
         self.screen.fill(BLACK)
         self.draw_text("YOU DIED",
                        self.screen, [WIDTH_BACKGROUND // 2, HEIGHT // 2 - LOGO_TEXT_SIZE],
@@ -165,11 +175,13 @@ class App:
     # SUPPORT FUNCTIONS
 
     def can_move(self, pos, direction):
+        """Checks whether it is possible to move from given position in given direction"""
         if self.grid[int(pos[0] + direction[0])][int(pos[1] + direction[1])] == 0:
             return False
         return True
 
     def draw_coins(self):
+        """Draws coins on game map"""
         for i in range(self.grid_shape[0]):
             for j in range(self.grid_shape[1]):
                 if self.coins[i][j] == 1:
@@ -184,9 +196,11 @@ class App:
             self.player.cur_score += self.coin_value
 
     def load_images(self):
+        """Loads all the images (currently only the background)"""
         self.image_background = pygame.image.load("images/background.png")
 
     def draw_text(self, text, screen, pos, size, color, font_name, make_centered_w=False, make_centered_h=False):
+        """Helper function to draw text on screen"""
         # define font
         font = pygame.font.SysFont(font_name, size)
         # render font
@@ -199,6 +213,7 @@ class App:
         screen.blit(on_screen_text, pos)
 
     def draw_grid(self):
+        """Helper function for debugging: draws map grid and player position on it"""
         for i in range(1, self.grid_shape[0]):
             pygame.draw.line(self.screen, GRAY,
                              (i * self.cell_pixel_size, 0),
@@ -215,6 +230,7 @@ class App:
                                                  self.cell_pixel_size, self.cell_pixel_size), 1)
 
     def draw_info(self):
+        """Draws the information about game to the right of game map"""
         # screen split
         pygame.draw.line(self.screen, WHITE,
                          (WIDTH_BACKGROUND + 1, 0),
@@ -278,6 +294,7 @@ class App:
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
     def get_end_pos_from_mouse(self):
+        """Finds mouse pos after mouse click for autopilot engagement"""
         x, y = pygame.mouse.get_pos()
         x = x // self.cell_pixel_size
         y = y // self.cell_pixel_size
@@ -290,6 +307,7 @@ class App:
     # SEARCH
 
     def search(self, start, end):
+        """Search function that calls the selected algorithm"""
         time_start = time.time()
 
         path = []
@@ -307,6 +325,7 @@ class App:
         return path
 
     def bfs(self, start, end):
+        """BFS SEARCH"""
         tree = SearchTree(start, end)
         frontier = [tree.root]
         explored = []
@@ -338,17 +357,20 @@ class App:
         return tree.path
 
     def _search_node_in_frontier(self, frontier, pos):
+        """SEARCH helper fucntion: finds position coords in array of Nodes"""
         for node in frontier:
             if node.pos == pos:
                 return True
         return False
 
     def dfs(self, start, end):
+        """DFS SEARCH Starter"""
         tree = SearchTree(start, end)
         self._dfs(tree, tree.root, [], [])
         return tree.path
 
     def _dfs(self, tree, cur, path_hist, node_hist):
+        """Recursive dfs search"""
         # flag as visited
         node_hist.append(cur.pos)
         # if we are further from start_pos then shortest path => return
@@ -376,6 +398,7 @@ class App:
                               node_hist_copy)
 
     def uni_cost(self, start, end):
+        """UNICOST SEARCH"""
         tree = SearchTree(start, end)
         frontier = [tree.root]
         explored = []

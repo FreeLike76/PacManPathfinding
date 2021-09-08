@@ -2,7 +2,9 @@ import pygame
 
 
 class Player:
+    """Player class defines player attributes"""
     def __init__(self, app, pos, color, lives):
+        """Player initialization"""
         # app
         self.app = app
 
@@ -26,11 +28,13 @@ class Player:
         self.color = color
 
     def draw(self):
+        """Drawing the player on map"""
         pygame.draw.circle(self.app.screen, self.color,
                            self.pix_pos,
                            int(self.app.cell_pixel_size * 0.4))
 
     def draw_grid(self):
+        """Helper function for debugging: drawing player location on grid"""
         # grid for debugging
         pygame.draw.rect(self.app.screen, self.color,
                          pygame.Rect(self.grid_pos[0] * self.app.cell_pixel_size,
@@ -38,12 +42,14 @@ class Player:
                                      self.app.cell_pixel_size, self.app.cell_pixel_size), 1)
 
     def move(self, new_direction):
+        """Saves input locations to stored_direction and disables autopilot"""
         # direction update on player's input
         self.stored_direction = new_direction
         self.autopilot = False
         self.autopilot_has_path = False
 
     def update(self):
+        """Defines player movements after human input or during autopilot"""
         # if centered
         if self.pix_pos.x % self.app.cell_pixel_size == self.app.cell_pixel_size // 2 \
                 and self.pix_pos.y % self.app.cell_pixel_size == self.app.cell_pixel_size // 2:
