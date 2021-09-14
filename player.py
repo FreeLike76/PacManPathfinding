@@ -40,6 +40,14 @@ class Player:
                          pygame.Rect(self.grid_pos[0] * self.app.cell_pixel_size,
                                      self.grid_pos[1] * self.app.cell_pixel_size,
                                      self.app.cell_pixel_size, self.app.cell_pixel_size), 1)
+        # drawing path
+        if self.autopilot and self.autopilot_has_path:
+            self._draw_path = pygame.math.Vector2(self.grid_pos)
+            pygame.draw.line(self.app.screen, self.color,
+                             self.pix_pos,
+                             self.app.end_pos_from_mouse * self.app.cell_pixel_size
+                             + pygame.math.Vector2(self.app.cell_pixel_size * 0.5,
+                                                   self.app.cell_pixel_size * 0.5))
 
     def move(self, new_direction):
         """Saves input locations to stored_direction and disables autopilot"""

@@ -36,6 +36,7 @@ class App:
         self.search_type = "bfs"
         self.search_time = 0
         self.end_pos_from_mouse = pygame.math.Vector2(0, 0)
+        self._debug_draw_path = []
 
         # score
         with open("score.txt", "r") as scoreboard:
@@ -228,6 +229,12 @@ class App:
                     pygame.draw.rect(self.screen, RED,
                                      pygame.Rect(i * self.cell_pixel_size, j * self.cell_pixel_size,
                                                  self.cell_pixel_size, self.cell_pixel_size), 1)
+        if DEBUG and self.player.autopilot:
+            for pos in self._debug_draw_path:
+                pygame.draw.rect(self.screen, PLAYER_COLOR,
+                                 pygame.Rect(pos[0] * self.cell_pixel_size,
+                                             pos[1] * self.cell_pixel_size,
+                                             self.cell_pixel_size, self.cell_pixel_size), 2)
 
     def draw_info(self):
         """Draws the information about game to the right of game map"""
@@ -322,6 +329,15 @@ class App:
         time_end = time.time()
         self.search_time = time_end - time_start
 
+        if DEBUG:
+            print("Cost:", len(path))
+            print("Path:", path)
+            # drawing path in-game
+            self._debug_draw_path = []
+            pos = pygame.math.Vector2(self.player.grid_pos)
+            for dir_ in path:
+                pos = pos + dir_
+                self._debug_draw_path.append(pos)
         return path
 
     def bfs(self, start, end):
