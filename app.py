@@ -4,7 +4,7 @@ import time
 from search.searchTree import *
 from player import *
 from appSettings import *
-from map import grid
+from map import Map
 
 pygame.init()
 
@@ -20,14 +20,9 @@ class App:
         self.running = True
         self.state = "start"
 
-        # images
-        self.load_images()
-
         # map
-        self.grid_shape = (28, 31)
         self.cell_pixel_size = 20
-        self.grid = [[grid[j][i] for j in range(len(grid))] for i in range(len(grid[0]))]  # T
-        self.coins = [[1 if grid[j][i] == 1 else 0 for j in range(len(grid))] for i in range(len(grid[0]))]  # Coins map
+        self.map = Map()
 
         # entities
         self.player = Player(self, START_POS, PLAYER_COLOR, PLAYER_LIVES)
@@ -87,16 +82,16 @@ class App:
 
         # menu
         self.draw_text("PACMAN",
-                       self.screen, [WIDTH_BACKGROUND // 2, HEIGHT // 2 - LOGO_TEXT_SIZE],
+                       [WIDTH_BACKGROUND // 2, HEIGHT // 2 - LOGO_TEXT_SIZE],
                        LOGO_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
         self.draw_text("Dmytro Geleshko",
-                       self.screen, [WIDTH_BACKGROUND // 2, HEIGHT // 2 - SMALL_TEXT_SIZE],
+                       [WIDTH_BACKGROUND // 2, HEIGHT // 2 - SMALL_TEXT_SIZE],
                        SMALL_TEXT_SIZE, MENU_BLUE, DEFAULT_FONT, True, True)
         self.draw_text("IP-91",
-                       self.screen, [WIDTH_BACKGROUND // 2, HEIGHT // 2],
+                       [WIDTH_BACKGROUND // 2, HEIGHT // 2],
                        SMALL_TEXT_SIZE, MENU_BLUE, DEFAULT_FONT, True, True)
         self.draw_text("PRESS SPACE TO PLAY",
-                       self.screen, [WIDTH_BACKGROUND // 2, HEIGHT // 2 + BIG_TEXT_SIZE * 2],
+                       [WIDTH_BACKGROUND // 2, HEIGHT // 2 + BIG_TEXT_SIZE * 2],
                        BIG_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
         self.draw_info()
         pygame.display.update()
@@ -142,14 +137,26 @@ class App:
 
     def play_draw(self):
         """Drawing the game"""
+        # refresh
         self.screen.fill(BLACK)
-        self.screen.blit(self.image_background, (0, 0))
+
+        # draw walls
+        self.draw_walls()
+
+        # draw coins
         self.draw_coins()
-        self.draw_info()
+
+        # draw player
         self.player.draw()
+
+        # draw score/search info
+        self.draw_info()
+
         if DEBUG:
-            self.draw_grid()
+            self.draw_player_path()
             self.player.draw_grid()
+
+        # apply
         pygame.display.update()
 
     # END FUNCTIONS
@@ -165,10 +172,10 @@ class App:
         """Drawing the end screen"""
         self.screen.fill(BLACK)
         self.draw_text("YOU DIED",
-                       self.screen, [WIDTH_BACKGROUND // 2, HEIGHT // 2 - LOGO_TEXT_SIZE],
+                       [WIDTH_BACKGROUND // 2, HEIGHT // 2 - LOGO_TEXT_SIZE],
                        LOGO_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
         self.draw_text("PRESS SPACE TO CLOSE",
-                       self.screen, [WIDTH_BACKGROUND // 2, HEIGHT // 2 + BIG_TEXT_SIZE * 2],
+                       [WIDTH_BACKGROUND // 2, HEIGHT // 2 + BIG_TEXT_SIZE * 2],
                        BIG_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
         self.draw_info()
         pygame.display.update()
@@ -177,30 +184,26 @@ class App:
 
     def can_move(self, pos, direction):
         """Checks whether it is possible to move from given position in given direction"""
-        if self.grid[int(pos[0] + direction[0])][int(pos[1] + direction[1])] == 0:
+        if self.map.walls[int(pos[0] + direction[0])][int(pos[1] + direction[1])] == 1:
             return False
         return True
 
     def draw_coins(self):
         """Draws coins on game map"""
-        for i in range(self.grid_shape[0]):
-            for j in range(self.grid_shape[1]):
-                if self.coins[i][j] == 1:
+        for i in range(self.map.shape[0]):
+            for j in range(self.map.shape[1]):
+                if self.map.coins[i][j] == 1:
                     pygame.draw.circle(self.screen, MENU_ORANGE,
                                        (i * self.cell_pixel_size + self.cell_pixel_size // 2,
                                         j * self.cell_pixel_size + self.cell_pixel_size // 2),
                                        self.cell_pixel_size // 5)
 
     def on_coin(self):
-        if self.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] == 1:
-            self.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] = 0
+        if self.map.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] == 1:
+            self.map.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] = 0
             self.player.cur_score += self.coin_value
 
-    def load_images(self):
-        """Loads all the images (currently only the background)"""
-        self.image_background = pygame.image.load("images/background.png")
-
-    def draw_text(self, text, screen, pos, size, color, font_name, make_centered_w=False, make_centered_h=False):
+    def draw_text(self, text, pos, size, color, font_name, make_centered_w=False, make_centered_h=False):
         """Helper function to draw text on screen"""
         # define font
         font = pygame.font.SysFont(font_name, size)
@@ -211,25 +214,31 @@ class App:
             pos[0] = pos[0] - on_screen_text.get_size()[0] // 2
         if make_centered_h:
             pos[1] = pos[1] - on_screen_text.get_size()[1] // 2
-        screen.blit(on_screen_text, pos)
+        self.screen.blit(on_screen_text, pos)
 
     def draw_grid(self):
         """Helper function for debugging: draws map grid and player position on it"""
-        for i in range(1, self.grid_shape[0]):
+        # Grid top-bottom
+        for i in range(1, self.map.shape[0]):
             pygame.draw.line(self.screen, GRAY,
                              (i * self.cell_pixel_size, 0),
                              (i * self.cell_pixel_size, HEIGHT_BACKGROUND))
-        for i in range(1, self.grid_shape[1]):
+        # Grid left-right
+        for i in range(1, self.map.shape[1]):
             pygame.draw.line(self.screen, GRAY,
                              (0, i * self.cell_pixel_size),
                              (WIDTH_BACKGROUND, i * self.cell_pixel_size))
-        for i in range(self.grid_shape[0]):
-            for j in range(self.grid_shape[1]):
-                if self.grid[i][j] == 0:
-                    pygame.draw.rect(self.screen, RED,
+
+    def draw_walls(self):
+        for i in range(self.map.shape[0]):
+            for j in range(self.map.shape[1]):
+                if self.map.walls[i][j] == 1:
+                    pygame.draw.rect(self.screen, MAP_BLUE,
                                      pygame.Rect(i * self.cell_pixel_size, j * self.cell_pixel_size,
-                                                 self.cell_pixel_size, self.cell_pixel_size), 1)
-        if DEBUG and self.player.autopilot:
+                                                 self.cell_pixel_size, self.cell_pixel_size))
+
+    def draw_player_path(self):
+        if self.player.autopilot:
             for pos in self._debug_draw_path:
                 pygame.draw.rect(self.screen, PLAYER_COLOR,
                                  pygame.Rect(pos[0] * self.cell_pixel_size,
@@ -252,51 +261,41 @@ class App:
 
         # high score
         self.draw_text("HIGH SCORE",
-                       self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, 0],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
         self.draw_text(str(self.player.high_score),
-                       self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
         # cur score
         self.draw_text("CURRENT SCORE",
-                       self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 3],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
         self.draw_text(str(self.player.cur_score),
-                       self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 4],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
         # lives
         self.draw_text("LIVES",
-                       self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 6],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
         self.draw_text(str(self.player.lives),
-                       self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 7],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
         # type of search
         self.draw_text("SEARCH",
-                       self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 9],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
         self.draw_text(self.search_type,
-                       self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 10],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
         # time of search
         self.draw_text("SEARCH TIME",
-                       self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 12],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
         self.draw_text("{:.3f}ms".format(round(self.search_time*1000, 3)),
-                       self.screen,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 13],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
 
@@ -305,7 +304,7 @@ class App:
         x, y = pygame.mouse.get_pos()
         x = x // self.cell_pixel_size
         y = y // self.cell_pixel_size
-        if self.grid[x][y] == 1:
+        if self.map.walls[x][y] == 0:
             self.end_pos_from_mouse = pygame.math.Vector2(x, y)
             return True
         return False
@@ -440,7 +439,7 @@ class App:
                         # add child
                         cur.nextPos.append(Node(cur.pos + direction, cost=cur.cost + self.transition_cost))
                         # add reward if coin present
-                        if self.coins[int(cur.nextPos[-1].pos[0])][int(cur.nextPos[-1].pos[1])] == 1:
+                        if self.map.coins[int(cur.nextPos[-1].pos[0])][int(cur.nextPos[-1].pos[1])] == 1:
                             cur.nextPos[-1].cost -= self.coin_value
                         # ref to parent
                         cur.nextPos[-1].parent = cur
