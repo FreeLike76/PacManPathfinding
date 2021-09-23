@@ -116,6 +116,8 @@ class App:
                     self.player.lives -= 1
                 if event.key == pygame.K_s:
                     if self.search_type == "dfs":
+                        self.search_type = "dfs_full"
+                    elif self.search_type == "dfs_full":
                         self.search_type = "bfs"
                     elif self.search_type == "bfs":
                         self.search_type = "uni cost"
@@ -309,7 +311,6 @@ class App:
             return True
         return False
 
-
     # SEARCH
 
     def search(self, start, end):
@@ -320,6 +321,8 @@ class App:
 
         if self.search_type == "dfs":
             path = self.dfs(start, end)
+        elif self.search_type == "dfs_full":
+            path = self.dfs_full(start, end)
         elif self.search_type == "bfs":
             path = self.bfs(start, end)
         else:
@@ -378,14 +381,14 @@ class App:
                 return True
         return False
 
-    def dfs(self, start, end):
-        """DFS SEARCH Starter"""
+    def dfs_full(self, start, end):
+        """DFS SEARCH FULL+MOD"""
         tree = SearchTree(start, end)
-        self._dfs(tree, tree.root, [], [])
+        self._dfs_full(tree, tree.root, [], [])
         return tree.path
 
-    def _dfs(self, tree, cur, path_hist, node_hist):
-        """Recursive dfs search"""
+    def _dfs_full(self, tree, cur, path_hist, node_hist):
+        """Recursive dfs search, FULL+MOD"""
         # flag as visited
         node_hist.append(cur.pos)
         # if we are further from start_pos then shortest path => return
@@ -407,7 +410,7 @@ class App:
                     path_hist_copy = path_hist.copy()
                     path_hist_copy.append(direction)
                     node_hist_copy = node_hist.copy()
-                    self._dfs(tree,
+                    self._dfs_full(tree,
                               Node(cur.pos + direction),
                               path_hist_copy,
                               node_hist_copy)
@@ -448,3 +451,30 @@ class App:
         # returning reverse because path was found from end to start
         tree.path.reverse()
         return tree.path
+
+    def dfs(self, start, end):
+        """DFS SEARCH"""
+        tree = SearchTree(start, end)
+        self._dfs_full(tree, tree.root, [], [])
+        return tree.path
+
+    def _dfs(self, tree, cur, path_hist, node_hist):
+        """Recursive dfs search"""
+        # flag as visited
+        node_hist.append(cur.pos)
+        # if found end pos check whether the path is shorter.
+        if cur.pos == tree.end_pos:
+            tree.path = path_hist.copy()
+        # else continue searching
+        else:
+            for direction in tree.directions:
+                # if path not found and can_move and not visited => start _dfs from new pos
+                if self.can_move(cur.pos, direction) and cur.pos + direction not in node_hist\
+                        and len(tree.path) == 0:
+                    path_hist_copy = path_hist.copy()
+                    path_hist_copy.append(direction)
+                    node_hist_copy = node_hist.copy()
+                    self._dfs_full(tree,
+                              Node(cur.pos + direction),
+                              path_hist_copy,
+                              node_hist_copy)
