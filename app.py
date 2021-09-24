@@ -114,14 +114,16 @@ class App:
                 if event.key == pygame.K_ESCAPE:
                     self.player.lives -= 1
                 if event.key == pygame.K_s:
-                    if self.search_type == "dfs":
-                        self.search_type = "dfs_full"
-                    elif self.search_type == "dfs_full":
+                    if self.search_type == "A*":
                         self.search_type = "bfs"
                     elif self.search_type == "bfs":
                         self.search_type = "uni cost"
-                    else:
+                    elif self.search_type == "uni cost":
                         self.search_type = "dfs"
+                    elif self.search_type == "dfs":
+                        self.search_type = "dfs+"
+                    else:
+                        self.search_type = "A*"
 
             if event.type == pygame.MOUSEBUTTONUP:
                 if self.get_end_pos_from_mouse():
@@ -328,14 +330,16 @@ class App:
 
         path = []
 
-        if self.search_type == "dfs":
-            path = dfs(self, start, end)
-        elif self.search_type == "dfs_full":
-            path = dfs_full(self, start, end)
+        if self.search_type == "A*":
+            path = A_star(self, start, end)
         elif self.search_type == "bfs":
             path = bfs(self, start, end)
-        else:
+        elif self.search_type == "uni cost":
             path = uni_cost(self, start, end)
+        elif self.search_type == "dfs":
+            path = dfs(self, start, end)
+        else:
+            path = dfs_full(self, start, end)
 
         time_end = time.time()
         self.search_time = time_end - time_start

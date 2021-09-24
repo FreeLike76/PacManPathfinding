@@ -1,6 +1,45 @@
-from appSettings import *
+from search import heuristic
 from search.searchTree import *
+from appSettings import *
 
+
+def A_star(app, start, end):
+    """UNICOST SEARCH"""
+    tree = SearchTree(start, end)
+    frontier = [tree.root]
+    explored = []
+
+    while len(frontier) > 0:
+        # less cost => first to open
+        frontier.sort(key=lambda node: node.cost)
+        cur = frontier.pop(0)
+        explored.append(cur.pos)
+        if cur.pos == tree.end_pos:
+            # creating temp ref and exec backpropagation until root is found
+            temp = cur
+            while temp.parent is not None:
+                tree.path.append(temp.pos - temp.parent.pos)
+                temp = temp.parent
+            break
+        else:
+            for direction in tree.directions:
+                # if can_move and not visited => start _dfs from new pos
+                if app.can_move(cur.pos, direction) \
+                        and cur.pos + direction not in explored \
+                        and not _search_node_in_frontier(frontier, cur.pos + direction):
+                    # add child
+                    cur.nextPos.append(Node(cur.pos + direction, cost=cur.cost + app.transition_cost +
+                                            heuristic.manhattan(cur.pos, tree.end_pos)))
+                    # add reward if coin present
+                    #if app.map.coins[int(cur.nextPos[-1].pos[0])][int(cur.nextPos[-1].pos[1])] == 1:
+                    #   cur.nextPos[-1].cost -= app.coin_value
+                    # ref to parent
+                    cur.nextPos[-1].parent = cur
+                    # add to frontier
+                    frontier.append(cur.nextPos[-1])
+    # returning reverse because path was found from end to start
+    tree.path.reverse()
+    return tree.path
 
 def bfs(app, start, end):
     """BFS SEARCH"""
@@ -121,7 +160,7 @@ def uni_cost(app, start, end):
 def dfs(app, start, end):
     """DFS SEARCH"""
     tree = SearchTree(start, end)
-    _dfs_full(app, tree, tree.root, [], [])
+    _dfs(app, tree, tree.root, [], [])
     return tree.path
 
 
@@ -141,8 +180,8 @@ def _dfs(app, tree, cur, path_hist, node_hist):
                 path_hist_copy = path_hist.copy()
                 path_hist_copy.append(direction)
                 node_hist_copy = node_hist.copy()
-                _dfs_full(app,
-                          tree,
-                          Node(cur.pos + direction),
-                          path_hist_copy,
-                          node_hist_copy)
+                _dfs(app,
+                     tree,
+                     Node(cur.pos + direction),
+                     path_hist_copy,
+                     node_hist_copy)
