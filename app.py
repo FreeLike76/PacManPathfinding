@@ -27,7 +27,8 @@ class App:
         self.player = Player(self, START_POS, PLAYER_COLOR, PLAYER_LIVES)
 
         # autopilot search
-        self.search_type = "bfs"
+        self.search_type = "A*"
+        self.search_heuristic = "Manhattan"
         self.search_time = 0
         self.end_pos_from_mouse = pygame.math.Vector2(0, 0)
         self._debug_draw_path = []
@@ -102,7 +103,9 @@ class App:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+
             if event.type == pygame.KEYDOWN:
+                # movement
                 if event.key == pygame.K_LEFT:
                     self.player.move(pygame.math.Vector2(-1, 0))
                 if event.key == pygame.K_RIGHT:
@@ -111,19 +114,33 @@ class App:
                     self.player.move(pygame.math.Vector2(0, -1))
                 if event.key == pygame.K_DOWN:
                     self.player.move(pygame.math.Vector2(0, 1))
+                # remove one life
                 if event.key == pygame.K_ESCAPE:
                     self.player.lives -= 1
+                # change search algorithm
                 if event.key == pygame.K_s:
                     if self.search_type == "A*":
-                        self.search_type = "bfs"
-                    elif self.search_type == "bfs":
-                        self.search_type = "uni cost"
-                    elif self.search_type == "uni cost":
-                        self.search_type = "dfs"
-                    elif self.search_type == "dfs":
-                        self.search_type = "dfs+"
+                        self.search_type = "A*g"
+                    elif self.search_type == "A*g":
+                        self.search_type = "BFS"
+                        self.search_heuristic = "None"
+                    elif self.search_type == "BFS":
+                        self.search_type = "UNI COST"
+                    elif self.search_type == "UNI COST":
+                        self.search_type = "DFS"
+                    elif self.search_type == "DFS":
+                        self.search_type = "DFS+"
                     else:
                         self.search_type = "A*"
+                        self.search_heuristic = "Manhattan"
+                # change search heuristic
+                if event.key == pygame.K_a:
+                    if self.search_heuristic == "Manhattan":
+                        self.search_heuristic = "Euclidean"
+                    elif self.search_heuristic == "Euclidean":
+                        self.search_heuristic = "Pow2"
+                    elif self.search_heuristic == "Pow2":
+                        self.search_heuristic = "Manhattan"
 
             if event.type == pygame.MOUSEBUTTONUP:
                 if self.get_end_pos_from_mouse():
@@ -278,7 +295,7 @@ class App:
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
         self.draw_text(str(self.player.high_score),
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE],
-                       MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
+                       MID_TEXT_SIZE, YELLOW, DEFAULT_FONT, True, False)
 
         # cur score
         self.draw_text("CURRENT SCORE",
@@ -286,7 +303,7 @@ class App:
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
         self.draw_text(str(self.player.cur_score),
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 4],
-                       MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
+                       MID_TEXT_SIZE, YELLOW, DEFAULT_FONT, True, False)
 
         # lives
         self.draw_text("LIVES",
@@ -294,7 +311,7 @@ class App:
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
         self.draw_text(str(self.player.lives),
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 7],
-                       MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
+                       MID_TEXT_SIZE, YELLOW, DEFAULT_FONT, True, False)
 
         # type of search
         self.draw_text("SEARCH",
@@ -302,15 +319,23 @@ class App:
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
         self.draw_text(self.search_type,
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 10],
+                       MID_TEXT_SIZE, YELLOW, DEFAULT_FONT, True, False)
+
+        # heuristic
+        self.draw_text("HEURISTIC",
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 12],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
+        self.draw_text(self.search_heuristic,
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 13],
+                       MID_TEXT_SIZE, RED, DEFAULT_FONT, True, False)
 
         # time of search
         self.draw_text("SEARCH TIME",
-                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 12],
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 15],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
-        self.draw_text("{:.3f}ms".format(round(self.search_time*1000, 3)),
-                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 13],
-                       MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
+        self.draw_text("{:.3f}ms".format(round(self.search_time * 1000, 3)),
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 16],
+                       MID_TEXT_SIZE, RED, DEFAULT_FONT, True, False)
 
     def get_end_pos_from_mouse(self):
         """Finds mouse pos after mouse click for autopilot engagement"""
@@ -331,14 +356,16 @@ class App:
         path = []
 
         if self.search_type == "A*":
-            path = A_star(self, start, end)
-        elif self.search_type == "bfs":
+            path = A_star(self, start, end, self.search_heuristic)
+        elif self.search_type == "A*g":
+            path = A_star(self, start, end, self.search_heuristic, True)
+        elif self.search_type == "BFS":
             path = bfs(self, start, end)
-        elif self.search_type == "uni cost":
+        elif self.search_type == "UNI COST":
             path = uni_cost(self, start, end)
-        elif self.search_type == "dfs":
+        elif self.search_type == "DFS":
             path = dfs(self, start, end)
-        else:
+        elif self.search_type == "DFS+":
             path = dfs_full(self, start, end)
 
         time_end = time.time()

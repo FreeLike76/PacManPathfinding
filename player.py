@@ -1,6 +1,7 @@
 import pygame
 from appSettings import *
 
+
 class Player:
     """Player class defines player attributes"""
     def __init__(self, app, pos, color, lives):

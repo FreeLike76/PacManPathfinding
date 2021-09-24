@@ -3,7 +3,7 @@ from search.searchTree import *
 from appSettings import *
 
 
-def A_star(app, start, end):
+def A_star(app, start, end, _heuristic="Manhattan", _greedy=False):
     """UNICOST SEARCH"""
     tree = SearchTree(start, end)
     frontier = [tree.root]
@@ -27,19 +27,35 @@ def A_star(app, start, end):
                 if app.can_move(cur.pos, direction) \
                         and cur.pos + direction not in explored \
                         and not _search_node_in_frontier(frontier, cur.pos + direction):
+
+                    # calculate heuristic
+                    if _heuristic == "Euclidean":
+                        cost = heuristic.euclidean(cur.pos + direction, tree.end_pos)
+                    elif _heuristic == "Pow2":
+                        cost = heuristic.pow_dist(cur.pos + direction, tree.end_pos)
+                    else:
+                        cost = heuristic.manhattan(cur.pos + direction, tree.end_pos)
+
+                    # if not greedy + hist_cost and transition_cost
+                    if not _greedy:
+                        cost += cur.cost + app.transition_cost
+
                     # add child
-                    cur.nextPos.append(Node(cur.pos + direction, cost=cur.cost + app.transition_cost +
-                                            heuristic.manhattan(cur.pos, tree.end_pos)))
+                    cur.nextPos.append(Node(cur.pos + direction, cost=cost))
                     # add reward if coin present
-                    #if app.map.coins[int(cur.nextPos[-1].pos[0])][int(cur.nextPos[-1].pos[1])] == 1:
+                    # if app.map.coins[int(cur.nextPos[-1].pos[0])][int(cur.nextPos[-1].pos[1])] == 1:
                     #   cur.nextPos[-1].cost -= app.coin_value
+
                     # ref to parent
                     cur.nextPos[-1].parent = cur
+
                     # add to frontier
                     frontier.append(cur.nextPos[-1])
+
     # returning reverse because path was found from end to start
     tree.path.reverse()
     return tree.path
+
 
 def bfs(app, start, end):
     """BFS SEARCH"""
