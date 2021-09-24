@@ -1,10 +1,10 @@
 import pygame
 import sys
 import time
-from search.searchTree import *
 from player import *
 from appSettings import *
 from map import Map
+from search.searchAlgorithms import *
 
 pygame.init()
 
@@ -21,7 +21,6 @@ class App:
         self.state = "start"
 
         # map
-        self.cell_pixel_size = 20
         self.map = Map()
 
         # entities
@@ -200,9 +199,9 @@ class App:
             for j in range(self.map.shape[1]):
                 if self.map.coins[i][j] == 1:
                     pygame.draw.circle(self.screen, MENU_ORANGE,
-                                       (i * self.cell_pixel_size + self.cell_pixel_size // 2,
-                                        j * self.cell_pixel_size + self.cell_pixel_size // 2),
-                                       self.cell_pixel_size // 5)
+                                       (i * CELL_PIXEL_SIZE + CELL_PIXEL_SIZE // 2,
+                                        j * CELL_PIXEL_SIZE + CELL_PIXEL_SIZE // 2),
+                                       CELL_PIXEL_SIZE // 5)
 
     def on_coin(self):
         if self.map.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] == 1:
@@ -227,29 +226,35 @@ class App:
         # Grid top-bottom
         for i in range(1, self.map.shape[0]):
             pygame.draw.line(self.screen, GRAY,
-                             (i * self.cell_pixel_size, 0),
-                             (i * self.cell_pixel_size, HEIGHT_BACKGROUND))
+                             (i * CELL_PIXEL_SIZE, 0),
+                             (i * CELL_PIXEL_SIZE, HEIGHT_BACKGROUND))
         # Grid left-right
         for i in range(1, self.map.shape[1]):
             pygame.draw.line(self.screen, GRAY,
-                             (0, i * self.cell_pixel_size),
-                             (WIDTH_BACKGROUND, i * self.cell_pixel_size))
+                             (0, i * CELL_PIXEL_SIZE),
+                             (WIDTH_BACKGROUND, i * CELL_PIXEL_SIZE))
 
     def draw_walls(self):
         for i in range(self.map.shape[0]):
             for j in range(self.map.shape[1]):
                 if self.map.walls[i][j] == 1:
                     pygame.draw.rect(self.screen, MAP_BLUE,
-                                     pygame.Rect(i * self.cell_pixel_size, j * self.cell_pixel_size,
-                                                 self.cell_pixel_size, self.cell_pixel_size))
+                                     pygame.Rect(i * CELL_PIXEL_SIZE, j * CELL_PIXEL_SIZE,
+                                                 CELL_PIXEL_SIZE, CELL_PIXEL_SIZE))
 
     def draw_player_path(self):
         if self.player.autopilot:
+            color = pygame.Vector3((PLAYER_COLOR[0]*2)//3,
+                                   (PLAYER_COLOR[1]*2)//3,
+                                   (PLAYER_COLOR[2]*2)//3)
+
+            color_step = color // len(self._debug_draw_path)
             for pos in self._debug_draw_path:
-                pygame.draw.rect(self.screen, PLAYER_COLOR,
-                                 pygame.Rect(pos[0] * self.cell_pixel_size,
-                                             pos[1] * self.cell_pixel_size,
-                                             self.cell_pixel_size, self.cell_pixel_size), 2)
+                pygame.draw.circle(self.screen, color,
+                                   (pos[0] * CELL_PIXEL_SIZE + CELL_PIXEL_SIZE // 2,
+                                    pos[1] * CELL_PIXEL_SIZE + CELL_PIXEL_SIZE // 2),
+                                   CELL_PIXEL_SIZE // 2.2, 2)
+                color = color+color_step
 
     def draw_info(self):
         """Draws the information about game to the right of game map"""
@@ -308,8 +313,8 @@ class App:
     def get_end_pos_from_mouse(self):
         """Finds mouse pos after mouse click for autopilot engagement"""
         x, y = pygame.mouse.get_pos()
-        x = x // self.cell_pixel_size
-        y = y // self.cell_pixel_size
+        x = x // CELL_PIXEL_SIZE
+        y = y // CELL_PIXEL_SIZE
         if self.map.walls[x][y] == 0:
             self.end_pos_from_mouse = pygame.math.Vector2(x, y)
             return True
@@ -324,13 +329,13 @@ class App:
         path = []
 
         if self.search_type == "dfs":
-            path = self.dfs(start, end)
+            path = dfs(self, start, end)
         elif self.search_type == "dfs_full":
-            path = self.dfs_full(start, end)
+            path = dfs_full(self, start, end)
         elif self.search_type == "bfs":
-            path = self.bfs(start, end)
+            path = bfs(self, start, end)
         else:
-            path = self.uni_cost(start, end)
+            path = uni_cost(self, start, end)
 
         time_end = time.time()
         self.search_time = time_end - time_start
@@ -344,141 +349,5 @@ class App:
             for dir_ in path:
                 pos = pos + dir_
                 self._debug_draw_path.append(pos)
+
         return path
-
-    def bfs(self, start, end):
-        """BFS SEARCH"""
-        tree = SearchTree(start, end)
-        frontier = [tree.root]
-        explored = []
-
-        while len(frontier) > 0:
-            cur = frontier.pop(0)
-            explored.append(cur.pos)
-            if cur.pos == tree.end_pos:
-                # creating temp ref and exec backpropagation until root is found
-                temp = cur
-                while temp.parent is not None:
-                    tree.path.append(temp.pos-temp.parent.pos)
-                    temp = temp.parent
-                break
-            else:
-                for direction in tree.directions:
-                    # if can_move and not visited => start _dfs from new pos
-                    if self.can_move(cur.pos, direction) \
-                            and cur.pos + direction not in explored \
-                            and not self._search_node_in_frontier(frontier, cur.pos + direction):
-                        # add child
-                        cur.nextPos.append(Node(cur.pos + direction))
-                        # ref to parent
-                        cur.nextPos[-1].parent = cur
-                        # add to frontier
-                        frontier.append(cur.nextPos[-1])
-        # returning reverse because path was found from end to start
-        tree.path.reverse()
-        return tree.path
-
-    def _search_node_in_frontier(self, frontier, pos):
-        """SEARCH helper fucntion: finds position coords in array of Nodes"""
-        for node in frontier:
-            if node.pos == pos:
-                return True
-        return False
-
-    def dfs_full(self, start, end):
-        """DFS SEARCH FULL+MOD"""
-        tree = SearchTree(start, end)
-        self._dfs_full(tree, tree.root, [], [])
-        return tree.path
-
-    def _dfs_full(self, tree, cur, path_hist, node_hist):
-        """Recursive dfs search, FULL+MOD"""
-        # flag as visited
-        node_hist.append(cur.pos)
-        # if we are further from start_pos then shortest path => return
-        if len(tree.path) != 0 and len(tree.path) <= len(path_hist):
-            if DEBUG:
-                print("dfs: pruned")
-            return
-        # if found end pos check whether the path is shorter.
-        if cur.pos == tree.end_pos:
-            if len(tree.path) == 0 or len(tree.path) > len(path_hist):
-                tree.path = path_hist.copy()
-                if DEBUG:
-                    print("dfs: found path\n", tree.path)
-        # else continue searching
-        else:
-            for direction in tree.directions:
-                # if can_move and not visited => start _dfs from new pos
-                if self.can_move(cur.pos, direction) and cur.pos + direction not in node_hist:
-                    path_hist_copy = path_hist.copy()
-                    path_hist_copy.append(direction)
-                    node_hist_copy = node_hist.copy()
-                    self._dfs_full(tree,
-                              Node(cur.pos + direction),
-                              path_hist_copy,
-                              node_hist_copy)
-
-    def uni_cost(self, start, end):
-        """UNICOST SEARCH"""
-        tree = SearchTree(start, end)
-        frontier = [tree.root]
-        explored = []
-
-        while len(frontier) > 0:
-            # less cost => first to open
-            frontier.sort(key=lambda node: node.cost)
-            cur = frontier.pop(0)
-            explored.append(cur.pos)
-            if cur.pos == tree.end_pos:
-                # creating temp ref and exec backpropagation until root is found
-                temp = cur
-                while temp.parent is not None:
-                    tree.path.append(temp.pos-temp.parent.pos)
-                    temp = temp.parent
-                break
-            else:
-                for direction in tree.directions:
-                    # if can_move and not visited => start _dfs from new pos
-                    if self.can_move(cur.pos, direction) \
-                            and cur.pos + direction not in explored \
-                            and not self._search_node_in_frontier(frontier, cur.pos + direction):
-                        # add child
-                        cur.nextPos.append(Node(cur.pos + direction, cost=cur.cost + self.transition_cost))
-                        # add reward if coin present
-                        if self.map.coins[int(cur.nextPos[-1].pos[0])][int(cur.nextPos[-1].pos[1])] == 1:
-                            cur.nextPos[-1].cost -= self.coin_value
-                        # ref to parent
-                        cur.nextPos[-1].parent = cur
-                        # add to frontier
-                        frontier.append(cur.nextPos[-1])
-        # returning reverse because path was found from end to start
-        tree.path.reverse()
-        return tree.path
-
-    def dfs(self, start, end):
-        """DFS SEARCH"""
-        tree = SearchTree(start, end)
-        self._dfs_full(tree, tree.root, [], [])
-        return tree.path
-
-    def _dfs(self, tree, cur, path_hist, node_hist):
-        """Recursive dfs search"""
-        # flag as visited
-        node_hist.append(cur.pos)
-        # if found end pos check whether the path is shorter.
-        if cur.pos == tree.end_pos:
-            tree.path = path_hist.copy()
-        # else continue searching
-        else:
-            for direction in tree.directions:
-                # if path not found and can_move and not visited => start _dfs from new pos
-                if self.can_move(cur.pos, direction) and cur.pos + direction not in node_hist\
-                        and len(tree.path) == 0:
-                    path_hist_copy = path_hist.copy()
-                    path_hist_copy.append(direction)
-                    node_hist_copy = node_hist.copy()
-                    self._dfs_full(tree,
-                              Node(cur.pos + direction),
-                              path_hist_copy,
-                              node_hist_copy)
