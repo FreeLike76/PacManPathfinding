@@ -142,7 +142,10 @@ class App:
         # refresh
         self.screen.fill(BLACK)
 
-        # draw walls
+        # draw grid
+        self.draw_grid()
+
+        # draw walls above grid
         self.draw_walls()
 
         # draw coins
@@ -155,6 +158,7 @@ class App:
         self.draw_info()
 
         if DEBUG:
+
             self.draw_player_path()
             self.player.draw_grid()
 
