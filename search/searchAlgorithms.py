@@ -4,7 +4,7 @@ from appSettings import *
 
 
 def A_star(app, start, end, _heuristic="Manhattan", _greedy=False):
-    """UNICOST SEARCH"""
+    """A* search with different heuristics and greedy variant"""
     tree = SearchTree(start, end)
     frontier = [tree.root]
     explored = []
@@ -38,7 +38,7 @@ def A_star(app, start, end, _heuristic="Manhattan", _greedy=False):
 
                     # if not greedy + hist_cost and transition_cost
                     if not _greedy:
-                        cost += cur.cost + app.transition_cost
+                        cost += (cur.cost + app.transition_cost)
 
                     # add child
                     cur.nextPos.append(Node(cur.pos + direction, cost=cost))

@@ -30,7 +30,12 @@ class App:
         self.search_type = "A*"
         self.search_heuristic = "Manhattan"
         self.search_time = 0
-        self.end_pos_from_mouse = pygame.math.Vector2(0, 0)
+
+        # where LMB was pressed on grid
+        self.grid_pos_mouse = pygame.math.Vector2(0, 0)
+        # where RMB was pressed on grid
+        self.grid_pos_mouse4 = []
+        # saves last path to draw it on screen
         self._debug_draw_path = []
 
         # score
@@ -142,10 +147,21 @@ class App:
                     elif self.search_heuristic == "Pow2":
                         self.search_heuristic = "Manhattan"
 
-            if event.type == pygame.MOUSEBUTTONUP:
-                if self.get_end_pos_from_mouse():
+            if event.type == pygame.MOUSEBUTTONDOWN and not self.mouse_on_wall():
+                # LMB
+                if event.button == 1:
+                    self.grid_pos_mouse = self.get_mouse_grid_pos()
                     self.player.autopilot = True
                     self.player.autopilot_has_path = False
+                # RMB
+                elif event.button == 3:
+                    # append next target
+                    self.grid_pos_mouse4.append(self.get_mouse_grid_pos())
+                    # if has 4 targets
+                    if len(self.grid_pos_mouse4) == 4:
+                        self.player.autopilot_direction = self.build_path_4()
+                        self.grid_pos_mouse4 = []
+                        self.player.autopilot = True
 
     def play_update(self):
         """Updating game state"""
@@ -262,12 +278,13 @@ class App:
                                                  CELL_PIXEL_SIZE, CELL_PIXEL_SIZE))
 
     def draw_player_path(self):
+        """Draws autopilot path as circles on grid whenever it is True"""
         if self.player.autopilot:
             color = pygame.Vector3((PLAYER_COLOR[0]*2)//3,
                                    (PLAYER_COLOR[1]*2)//3,
                                    (PLAYER_COLOR[2]*2)//3)
 
-            color_step = color // len(self._debug_draw_path)
+            color_step = color // (len(self._debug_draw_path) + 1)
             for pos in self._debug_draw_path:
                 pygame.draw.circle(self.screen, color,
                                    (pos[0] * CELL_PIXEL_SIZE + CELL_PIXEL_SIZE // 2,
@@ -337,15 +354,20 @@ class App:
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 16],
                        MID_TEXT_SIZE, RED, DEFAULT_FONT, True, False)
 
-    def get_end_pos_from_mouse(self):
+    def mouse_on_wall(self):
+        x, y = pygame.mouse.get_pos()
+        x = x // CELL_PIXEL_SIZE
+        y = y // CELL_PIXEL_SIZE
+        if self.map.walls[x][y] == 1:
+            return True
+        return False
+
+    def get_mouse_grid_pos(self):
         """Finds mouse pos after mouse click for autopilot engagement"""
         x, y = pygame.mouse.get_pos()
         x = x // CELL_PIXEL_SIZE
         y = y // CELL_PIXEL_SIZE
-        if self.map.walls[x][y] == 0:
-            self.end_pos_from_mouse = pygame.math.Vector2(x, y)
-            return True
-        return False
+        return pygame.math.Vector2(x, y)
 
     # SEARCH
 
@@ -382,3 +404,18 @@ class App:
                 self._debug_draw_path.append(pos)
 
         return path
+
+    def build_path_4(self):
+        total_path = []
+
+        cur = self.player.grid_pos
+        next = self.grid_pos_mouse4.pop(0)
+
+        this_path = self.search(cur, next)
+        this_path_len = len(this_path)
+
+        for other_next in self.grid_pos_mouse4:
+            other_path = self.search(cur, other_next)
+            if len(other_path) > len(this_path):
+                pass
+                # INDEXES
