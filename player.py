@@ -45,7 +45,7 @@ class Player:
         if self.autopilot and self.autopilot_has_path:
             pygame.draw.line(self.app.screen, RED,
                              self.pix_pos,
-                             self.app.end_pos_from_mouse * CELL_PIXEL_SIZE
+                             self.app.grid_pos_mouse * CELL_PIXEL_SIZE
                              + pygame.math.Vector2(CELL_PIXEL_SIZE * 0.5,
                                                    CELL_PIXEL_SIZE * 0.5))
 
@@ -68,7 +68,7 @@ class Player:
                 # if path was not found yet
                 if not self.autopilot_has_path:
                     # find path
-                    self.autopilot_direction = self.app.search(self.grid_pos, self.app.end_pos_from_mouse)
+                    self.autopilot_direction = self.app.search(self.grid_pos, self.app.grid_pos_mouse)
                     self.autopilot_has_path = True
                 # follow the path
                 if len(self.autopilot_direction) > 0:

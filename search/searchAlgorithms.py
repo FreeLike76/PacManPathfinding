@@ -195,9 +195,9 @@ def _dfs(app, tree, cur, path_hist, node_hist):
                     and len(tree.path) == 0:
                 path_hist_copy = path_hist.copy()
                 path_hist_copy.append(direction)
-                node_hist_copy = node_hist.copy()
+                #node_hist_copy = node_hist.copy()
                 _dfs(app,
                      tree,
                      Node(cur.pos + direction),
                      path_hist_copy,
-                     node_hist_copy)
+                     node_hist)

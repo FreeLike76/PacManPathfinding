@@ -280,11 +280,11 @@ class App:
     def draw_player_path(self):
         """Draws autopilot path as circles on grid whenever it is True"""
         if self.player.autopilot:
-            color = pygame.Vector3((PLAYER_COLOR[0]*2)//3,
-                                   (PLAYER_COLOR[1]*2)//3,
-                                   (PLAYER_COLOR[2]*2)//3)
+            color = pygame.Vector3(PLAYER_COLOR[0]//2,
+                                   PLAYER_COLOR[1]//2,
+                                   PLAYER_COLOR[2]//2)
 
-            color_step = color // (len(self._debug_draw_path) + 1)
+            color_step = color // (1.5 * len(self._debug_draw_path))
             for pos in self._debug_draw_path:
                 pygame.draw.circle(self.screen, color,
                                    (pos[0] * CELL_PIXEL_SIZE + CELL_PIXEL_SIZE // 2,
