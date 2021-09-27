@@ -122,6 +122,10 @@ class App:
                 # remove one life
                 if event.key == pygame.K_ESCAPE:
                     self.player.lives -= 1
+                # start search for all coins
+                if event.key == pygame.K_q:
+                    self.player.autopilot_type = 3
+                    self.player.autopilot_has_path = False
                 # change search algorithm
                 if event.key == pygame.K_s:
                     if self.search_type == "A*":
@@ -153,7 +157,7 @@ class App:
                 # LMB
                 if event.button == 1:
                     self.grid_pos_mouse = self.get_mouse_grid_pos()
-                    self.player.autopilot = True
+                    self.player.autopilot_type = 1
                     self.player.autopilot_has_path = False
                 # RMB
                 elif event.button == 3:
@@ -161,7 +165,7 @@ class App:
                     self.grid_pos_mouse4.append(self.get_mouse_grid_pos())
                     # if has 4 targets
                     if len(self.grid_pos_mouse4) == 4:
-                        self.player.autopilot4 = True
+                        self.player.autopilot_type = 2
                         self.player.autopilot_has_path = False
 
     def play_update(self):
@@ -193,7 +197,7 @@ class App:
         self.draw_info()
 
         if DEBUG:
-            self.draw_autopilot4()
+            self.draw_autopilot2_targets()
             self.draw_player_path()
             self.player.draw_grid()
 
@@ -280,7 +284,7 @@ class App:
 
     def draw_player_path(self):
         """Draws autopilot path as circles on grid whenever it is True"""
-        if self.player.autopilot or self.player.autopilot4:
+        if self.player.autopilot_type != 0:
             color = pygame.Vector3(PLAYER_COLOR[0]//2,
                                    PLAYER_COLOR[1]//2,
                                    PLAYER_COLOR[2]//2)
@@ -370,7 +374,7 @@ class App:
         y = y // CELL_PIXEL_SIZE
         return pygame.math.Vector2(x, y)
 
-    def draw_autopilot4(self):
+    def draw_autopilot2_targets(self):
         for pos in self.grid_pos_mouse4:
             pygame.draw.rect(self.screen, RED,
                              pygame.Rect(pos[0] * CELL_PIXEL_SIZE,
@@ -430,6 +434,40 @@ class App:
                     best_next_index = i
             total_path = total_path + best_next_path
             start = self.grid_pos_mouse4.pop(best_next_index)
+
+        if DEBUG:
+            self.path_stats(total_path)
+        self.search_time = time_sum
+        return total_path
+
+    def search_all(self, start):
+        time_sum = 0
+        total_path = []
+        targets = []
+        # find pos where coin is not collected
+        for i in range(self.map.coins.shape[0]):
+            for j in range(self.map.coins.shape[1]):
+                if self.map.coins[i, j] == 1:
+                    targets.append(pygame.math.Vector2(i, j))
+        while True:
+            targets.sort(key=lambda pos: heuristic.manhattan(pos, start))
+
+            next = targets.pop(0)
+
+            path = self.search(start, next)
+            total_path = total_path + path
+            time_sum += self.search_time
+
+            visited = start
+            for i in range(len(path)):
+                visited = visited + path[i]
+                if visited in targets:
+                    targets.remove(visited)
+
+            if len(targets) == 0:
+                break
+            else:
+                start = next
 
         if DEBUG:
             self.path_stats(total_path)

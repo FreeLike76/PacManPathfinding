@@ -9,9 +9,8 @@ class Player:
         # app
         self.app = app
 
-        # autopilot
-        self.autopilot = False
-        self.autopilot4 = False
+        # autopilot [0 - off, 1 - simple, 2 - nodes4, 3 - all coins]
+        self.autopilot_type = 0
         self.autopilot_has_path = False
         self.autopilot_direction = []
 
@@ -43,7 +42,7 @@ class Player:
                                      self.grid_pos[1] * CELL_PIXEL_SIZE,
                                      CELL_PIXEL_SIZE, CELL_PIXEL_SIZE), 1)
         # drawing path
-        if self.autopilot and self.autopilot_has_path:
+        if self.autopilot_type == 1 and self.autopilot_has_path:
             pygame.draw.line(self.app.screen, RED,
                              self.pix_pos,
                              self.app.grid_pos_mouse * CELL_PIXEL_SIZE
@@ -54,8 +53,7 @@ class Player:
         """Saves input locations to stored_direction and disables autopilot"""
         # direction update on player's input
         self.stored_direction = new_direction
-        self.autopilot = False
-        self.autopilot4 = False
+        self.autopilot_type = 0
         self.autopilot_has_path = False
 
     def update(self):
@@ -64,25 +62,29 @@ class Player:
         if self.pix_pos.x % CELL_PIXEL_SIZE == CELL_PIXEL_SIZE // 2 \
                 and self.pix_pos.y % CELL_PIXEL_SIZE == CELL_PIXEL_SIZE // 2:
             # if autopilot is enabled
-            if self.autopilot or self.autopilot4:
+            if self.autopilot_type != 0:
                 self.direction = pygame.math.Vector2(0, 0)
                 self.stored_direction = pygame.math.Vector2(0, 0)
-                # if path was not found yet and simple search
-                if not self.autopilot_has_path and self.autopilot:
+
+                # 1. No path + simple
+                if not self.autopilot_has_path and self.autopilot_type == 1:
                     # find path
                     self.autopilot_direction = self.app.search(self.grid_pos, self.app.grid_pos_mouse)
                     self.autopilot_has_path = True
-                # if path for 4nodes was not found yet
-                if not self.autopilot_has_path and self.autopilot4:
+                # 2. No path + 4-nods-task
+                if not self.autopilot_has_path and self.autopilot_type == 2:
                     self.autopilot_direction = self.app.search4(self.grid_pos)
+                    self.autopilot_has_path = True
+                # 3. No path + all-coins-task
+                if not self.autopilot_has_path and self.autopilot_type == 3:
+                    self.autopilot_direction = self.app.search_all(self.grid_pos)
                     self.autopilot_has_path = True
                 # follow the path
                 if len(self.autopilot_direction) > 0:
                     self.stored_direction = self.autopilot_direction.pop(0)
                 # if destination is reached stop autopilot
                 else:
-                    self.autopilot = False
-                    self.autopilot4 = False
+                    self.autopilot_type = 0
                     self.autopilot_has_path = False
                     self.stored_direction = pygame.math.Vector2(0, 0)
             # if can change dir

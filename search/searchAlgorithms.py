@@ -1,3 +1,4 @@
+import numpy as np
 from search import heuristic
 from search.searchTree import *
 from appSettings import *
@@ -57,6 +58,48 @@ def A_star(app, start, end, _heuristic="Manhattan", _greedy=False, _count_coin=F
     # returning reverse because path was found from end to start
     tree.path.reverse()
     return tree.path
+
+# Was optimal search all coins algorithm but toooo slow
+"""def uni_cost_all_coins(app, start):
+    tree = SearchTree(start, None)
+    frontier = [tree.root]
+    #explored = []
+
+    tree.root.coins_map = app.map.coins.copy()
+
+    while len(frontier) > 0:
+        # less cost => first to open
+        frontier.sort(key=lambda node: node.cost)
+        cur = frontier.pop(0)
+        #explored.append(cur.pos)
+        print(cur.pos)
+        if cur.coins_map.sum() == 0:
+            # creating temp ref and exec backpropagation until root is found
+            temp = cur
+            while temp.parent is not None:
+                tree.path.append(temp.pos - temp.parent.pos)
+                temp = temp.parent
+            break
+        else:
+            for direction in tree.directions:
+                # if can_move and not visited => start _dfs from new pos
+                if app.can_move(cur.pos, direction) \
+                        and not _search_node_in_frontier(frontier, cur.pos + direction):
+                    # add child
+                    cur.nextPos.append(Node(cur.pos + direction, cost=cur.cost + app.transition_cost))
+                    # copy map
+                    cur.nextPos[-1].coins_map = cur.coins_map.copy()
+                    # add reward if coin present and remove coin on child's map
+                    if cur.coins_map[int(cur.nextPos[-1].pos[0])][int(cur.nextPos[-1].pos[1])] == 1:
+                        cur.nextPos[-1].cost -= COIN_VALUE
+                        cur.nextPos[-1].coins_map[int(cur.nextPos[-1].pos[0])][int(cur.nextPos[-1].pos[1])] = 0
+                    # ref to parent
+                    cur.nextPos[-1].parent = cur
+                    # add to frontier
+                    frontier.append(cur.nextPos[-1])
+    # returning reverse because path was found from end to start
+    tree.path.reverse()
+    return tree.path"""
 
 
 def bfs(app, start, end):

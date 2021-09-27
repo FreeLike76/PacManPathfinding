@@ -14,3 +14,5 @@ class Node:
         self.parent = parent
         # score for uni-cost
         self.cost = cost
+        # coins map
+        self.coins_map = None
