@@ -127,6 +127,8 @@ class App:
                     if self.search_type == "A*":
                         self.search_type = "A*g"
                     elif self.search_type == "A*g":
+                        self.search_type = "A*c"
+                    elif self.search_type == "A*c":
                         self.search_type = "BFS"
                         self.search_heuristic = "None"
                     elif self.search_type == "BFS":
@@ -395,7 +397,9 @@ class App:
         if self.search_type == "A*":
             path = A_star(self, start, end, self.search_heuristic)
         elif self.search_type == "A*g":
-            path = A_star(self, start, end, self.search_heuristic, True)
+            path = A_star(self, start, end, self.search_heuristic, _greedy=True)
+        elif self.search_type == "A*c":
+            path = A_star(self, start, end, self.search_heuristic, _count_coin=True)
         elif self.search_type == "BFS":
             path = bfs(self, start, end)
         elif self.search_type == "UNI COST":

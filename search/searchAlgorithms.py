@@ -3,7 +3,7 @@ from search.searchTree import *
 from appSettings import *
 
 
-def A_star(app, start, end, _heuristic="Manhattan", _greedy=False):
+def A_star(app, start, end, _heuristic="Manhattan", _greedy=False, _count_coin=False):
     """A* search with different heuristics and greedy variant"""
     tree = SearchTree(start, end)
     frontier = [tree.root]
@@ -30,21 +30,23 @@ def A_star(app, start, end, _heuristic="Manhattan", _greedy=False):
 
                     # calculate heuristic
                     if _heuristic == "Euclidean":
-                        cost = heuristic.euclidean(cur.pos + direction, tree.end_pos)
+                        cost = heuristic.euclidean(cur.pos + direction, tree.end_pos) * HEURISTIC_WEIGHT
                     elif _heuristic == "Pow2":
-                        cost = heuristic.pow_dist(cur.pos + direction, tree.end_pos)
+                        cost = heuristic.pow_dist(cur.pos + direction, tree.end_pos) * HEURISTIC_WEIGHT
                     else:
-                        cost = heuristic.manhattan(cur.pos + direction, tree.end_pos)
+                        cost = heuristic.manhattan(cur.pos + direction, tree.end_pos) * HEURISTIC_WEIGHT
 
                     # if not greedy + hist_cost and transition_cost
                     if not _greedy:
                         cost += (cur.cost + app.transition_cost)
 
+                    # add reward if coin present
+                    if _count_coin and \
+                            app.map.coins[int((cur.pos + direction)[0])][int((cur.pos + direction)[1])] == 1:
+                        cost -= COIN_VALUE
+
                     # add child
                     cur.nextPos.append(Node(cur.pos + direction, cost=cost))
-                    # add reward if coin present
-                    # if app.map.coins[int(cur.nextPos[-1].pos[0])][int(cur.nextPos[-1].pos[1])] == 1:
-                    #   cur.nextPos[-1].cost -= app.coin_value
 
                     # ref to parent
                     cur.nextPos[-1].parent = cur
@@ -163,7 +165,7 @@ def uni_cost(app, start, end):
                     cur.nextPos.append(Node(cur.pos + direction, cost=cur.cost + app.transition_cost))
                     # add reward if coin present
                     if app.map.coins[int(cur.nextPos[-1].pos[0])][int(cur.nextPos[-1].pos[1])] == 1:
-                        cur.nextPos[-1].cost -= app.coin_value
+                        cur.nextPos[-1].cost -= COIN_VALUE
                     # ref to parent
                     cur.nextPos[-1].parent = cur
                     # add to frontier
