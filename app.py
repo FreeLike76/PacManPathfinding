@@ -159,9 +159,8 @@ class App:
                     self.grid_pos_mouse4.append(self.get_mouse_grid_pos())
                     # if has 4 targets
                     if len(self.grid_pos_mouse4) == 4:
-                        self.player.autopilot_direction = self.build_path_4()
-                        self.grid_pos_mouse4 = []
-                        self.player.autopilot = True
+                        self.player.autopilot4 = True
+                        self.player.autopilot_has_path = False
 
     def play_update(self):
         """Updating game state"""
@@ -192,7 +191,7 @@ class App:
         self.draw_info()
 
         if DEBUG:
-
+            self.draw_autopilot4()
             self.draw_player_path()
             self.player.draw_grid()
 
@@ -279,7 +278,7 @@ class App:
 
     def draw_player_path(self):
         """Draws autopilot path as circles on grid whenever it is True"""
-        if self.player.autopilot:
+        if self.player.autopilot or self.player.autopilot4:
             color = pygame.Vector3(PLAYER_COLOR[0]//2,
                                    PLAYER_COLOR[1]//2,
                                    PLAYER_COLOR[2]//2)
@@ -369,7 +368,23 @@ class App:
         y = y // CELL_PIXEL_SIZE
         return pygame.math.Vector2(x, y)
 
+    def draw_autopilot4(self):
+        for pos in self.grid_pos_mouse4:
+            pygame.draw.rect(self.screen, RED,
+                             pygame.Rect(pos[0] * CELL_PIXEL_SIZE,
+                                         pos[1] * CELL_PIXEL_SIZE,
+                                         CELL_PIXEL_SIZE, CELL_PIXEL_SIZE), 2)
+
     # SEARCH
+    def path_stats(self, path):
+        print("Cost:", len(path))
+        print("Path:", path)
+        # drawing path in-game
+        self._debug_draw_path = []
+        pos = pygame.math.Vector2(self.player.grid_pos)
+        for dir_ in path:
+            pos = pos + dir_
+            self._debug_draw_path.append(pos)
 
     def search(self, start, end):
         """Search function that calls the selected algorithm"""
@@ -394,28 +409,23 @@ class App:
         self.search_time = time_end - time_start
 
         if DEBUG:
-            print("Cost:", len(path))
-            print("Path:", path)
-            # drawing path in-game
-            self._debug_draw_path = []
-            pos = pygame.math.Vector2(self.player.grid_pos)
-            for dir_ in path:
-                pos = pos + dir_
-                self._debug_draw_path.append(pos)
-
+            self.path_stats(path)
         return path
 
-    def build_path_4(self):
+    def search4(self, start):
         total_path = []
+        best_next_path = []
+        best_next_index = 0
+        while len(self.grid_pos_mouse4) > 0:
+            for i in range(len(self.grid_pos_mouse4)):
+                this_path = self.search(start, self.grid_pos_mouse4[i])
+                if i == 0 or len(this_path) < len(best_next_path):
+                    best_next_path = this_path
+                    best_next_index = i
+            total_path = total_path + best_next_path
+            start = self.grid_pos_mouse4.pop(best_next_index)
 
-        cur = self.player.grid_pos
-        next = self.grid_pos_mouse4.pop(0)
+        if DEBUG:
+            self.path_stats(total_path)
 
-        this_path = self.search(cur, next)
-        this_path_len = len(this_path)
-
-        for other_next in self.grid_pos_mouse4:
-            other_path = self.search(cur, other_next)
-            if len(other_path) > len(this_path):
-                pass
-                # INDEXES
+        return total_path
