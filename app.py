@@ -417,12 +417,14 @@ class App:
         return path
 
     def search4(self, start):
+        time_sum = 0
         total_path = []
         best_next_path = []
         best_next_index = 0
         while len(self.grid_pos_mouse4) > 0:
             for i in range(len(self.grid_pos_mouse4)):
                 this_path = self.search(start, self.grid_pos_mouse4[i])
+                time_sum += self.search_time
                 if i == 0 or len(this_path) < len(best_next_path):
                     best_next_path = this_path
                     best_next_index = i
@@ -431,5 +433,5 @@ class App:
 
         if DEBUG:
             self.path_stats(total_path)
-
+        self.search_time = time_sum
         return total_path
