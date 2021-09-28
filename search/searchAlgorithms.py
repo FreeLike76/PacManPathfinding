@@ -26,8 +26,7 @@ def A_star(app, start, end, _heuristic="Manhattan", _greedy=False, _count_coin=F
             for direction in tree.directions:
                 # if can_move and not visited => start _dfs from new pos
                 if app.can_move(cur.pos, direction) \
-                        and cur.pos + direction not in explored \
-                        and not _search_node_in_frontier(frontier, cur.pos + direction):
+                        and cur.pos + direction not in explored:
 
                     # calculate heuristic
                     if _heuristic == "Euclidean":
@@ -39,7 +38,7 @@ def A_star(app, start, end, _heuristic="Manhattan", _greedy=False, _count_coin=F
 
                     # if not greedy + hist_cost and transition_cost
                     if not _greedy:
-                        cost += (cur.cost + app.transition_cost)
+                        cost += (cur.cost + TRANSITION_COST)
 
                     # add reward if coin present
                     if _count_coin and \
@@ -86,7 +85,7 @@ def A_star(app, start, end, _heuristic="Manhattan", _greedy=False, _count_coin=F
                 if app.can_move(cur.pos, direction) \
                         and not _search_node_in_frontier(frontier, cur.pos + direction):
                     # add child
-                    cur.nextPos.append(Node(cur.pos + direction, cost=cur.cost + app.transition_cost))
+                    cur.nextPos.append(Node(cur.pos + direction, cost=cur.cost + TRANSITION_COST))
                     # copy map
                     cur.nextPos[-1].coins_map = cur.coins_map.copy()
                     # add reward if coin present and remove coin on child's map
@@ -205,7 +204,7 @@ def uni_cost(app, start, end):
                         and cur.pos + direction not in explored \
                         and not _search_node_in_frontier(frontier, cur.pos + direction):
                     # add child
-                    cur.nextPos.append(Node(cur.pos + direction, cost=cur.cost + app.transition_cost))
+                    cur.nextPos.append(Node(cur.pos + direction, cost=cur.cost + TRANSITION_COST))
                     # add reward if coin present
                     if app.map.coins[int(cur.nextPos[-1].pos[0])][int(cur.nextPos[-1].pos[1])] == 1:
                         cur.nextPos[-1].cost -= COIN_VALUE

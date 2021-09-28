@@ -45,10 +45,6 @@ class App:
                 if int(num) > self.player.high_score:
                     self.player.high_score = int(num)
 
-        # cost
-        self.coin_value = COIN_VALUE
-        self.transition_cost = TRANSITION_COST
-
     def run(self):
         """Main game cycle"""
         while self.running:
@@ -246,7 +242,7 @@ class App:
     def on_coin(self):
         if self.map.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] == 1:
             self.map.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] = 0
-            self.player.cur_score += self.coin_value
+            self.player.cur_score += COIN_VALUE
 
     def draw_text(self, text, pos, size, color, font_name, make_centered_w=False, make_centered_h=False):
         """Helper function to draw text on screen"""
