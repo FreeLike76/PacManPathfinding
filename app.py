@@ -6,6 +6,7 @@ from appSettings import *
 from map import Map
 from search.searchAlgorithms import *
 
+# pygame init
 pygame.init()
 
 
