@@ -58,7 +58,7 @@ def A_star(app, start, end, _heuristic="Manhattan", _greedy=False, _count_coin=F
     tree.path.reverse()
     return tree.path
 
-# Was optimal search all coins algorithm but toooo slow
+# Optimal search all coins algorithm but too slow
 """def uni_cost_all_coins(app, start):
     tree = SearchTree(start, None)
     frontier = [tree.root]

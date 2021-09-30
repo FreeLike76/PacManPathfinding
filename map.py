@@ -10,9 +10,6 @@ class Map:
         self._random_split(x=(0, 31), y=(0, 31))
         self.coins = self.walls == 0
 
-    def _random_map(self):
-        pass
-
     def _apply_border(self):
         self.walls[0, ::] = 1
         self.walls[-1, ::] = 1
