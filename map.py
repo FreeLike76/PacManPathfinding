@@ -1,14 +1,20 @@
 import numpy as np
+from appSettings import *
 
 
 class Map:
     def __init__(self):
-        # if using std map
         self.shape = (32, 32)
+
+        # add walls
         self.walls = np.zeros(self.shape)
         self._apply_border()
         self._random_split(x=(0, 31), y=(0, 31))
-        self.coins = self.walls == 0
+
+        # add coins
+        self.coins = np.random.uniform(0, 1, self.shape)
+        self.coins = self.coins < COIN_SPAWN_P
+        self.coins[self.walls == 1] = False
 
     def _apply_border(self):
         self.walls[0, ::] = 1
