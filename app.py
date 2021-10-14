@@ -1,6 +1,7 @@
 import sys
 import time
-from entities.player import *
+from entities.player import Player
+from entities.enemy import Enemy
 from map import Map
 from search.searchAlgorithms import *
 
@@ -22,9 +23,32 @@ class App:
         # map
         self.map = Map()
 
-        # entities
+        # spawn player
         self.player = Player(self, START_POS, PLAYER_COLOR, PLAYER_LIVES)
+        # spawn enemies, but keep hist to prevent entity overlap
+        self.enemies = []
+        spawn_coord = [START_POS]
+        for i in range(ENEMY_RANDOM):
+            while True:
+                # generate x ,y
+                x = np.random.randint(0, self.map.shape[0])
+                y = np.random.randint(0, self.map.shape[1])
+                if self.map.walls[x][y] == 0 and (x, y) not in spawn_coord:
+                    spawn_coord.append((x, y))
+                    break
+            # spawn enemy_random
+            self.enemies.append(Enemy(self, spawn_coord[-1], MENU_BLUE, "random"))
 
+        for i in range(ENEMY_CHASER):
+            while True:
+                # generate x ,y
+                x = np.random.randint(0, self.map.shape[0])
+                y = np.random.randint(0, self.map.shape[1])
+                if self.map.walls[x][y] == 0 and (x, y) not in spawn_coord:
+                    spawn_coord.append((x, y))
+                    break
+            # spawn enemy_chaser
+            self.enemies.append(Enemy(self, spawn_coord[-1], RED, "chaser"))
 
         # autopilot search
         self.search_type = "A*"
@@ -170,7 +194,10 @@ class App:
             self.state = "end"
         else:
             self.on_coin()
+            # update entities
             self.player.update()
+            for enemy in self.enemies:
+                enemy.update()
 
     def play_draw(self):
         """Drawing the game"""
@@ -189,11 +216,15 @@ class App:
         # draw player
         self.player.draw()
 
+        # draw enemies
+        for enemy in self.enemies:
+            enemy.draw()
+
         # draw score/search info
         self.draw_info()
 
         if DEBUG:
-            self.draw_autopilot2_targets()
+            self.draw_selected_rmb_targets()
             self.draw_player_path()
             self.player.draw_grid()
 
@@ -370,7 +401,7 @@ class App:
         y = y // CELL_PIXEL_SIZE
         return pygame.math.Vector2(x, y)
 
-    def draw_autopilot2_targets(self):
+    def draw_selected_rmb_targets(self):
         for pos in self.grid_pos_mouse4:
             pygame.draw.rect(self.screen, RED,
                              pygame.Rect(pos[0] * CELL_PIXEL_SIZE,
@@ -388,7 +419,7 @@ class App:
             pos = pos + dir_
             self._debug_draw_path.append(pos)
 
-    def search(self, start, end):
+    def search(self, start, end, update_stats=True):
         """Search function that calls the selected algorithm"""
         time_start = time.time()
 
@@ -412,7 +443,7 @@ class App:
         time_end = time.time()
         self.search_time = time_end - time_start
 
-        if DEBUG:
+        if DEBUG and update_stats:
             self.path_stats(path)
         return path
 

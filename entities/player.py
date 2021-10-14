@@ -5,7 +5,7 @@ class Player(Entity):
     """Player class, inherited from Entity, defines player attributes"""
 
     def __init__(self, app, pos, color, lives):
-        """Player initialization"""
+        """Initialization"""
         Entity.__init__(self, app, pos, color)
 
         # autopilot [0 - off, 1 - simple, 2 - nodes4, 3 - all coins]
