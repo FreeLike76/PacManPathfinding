@@ -18,6 +18,7 @@ class App:
 
         # state
         self.running = True
+        self.won = False
         self.state = "start"
 
         # map
@@ -190,7 +191,10 @@ class App:
 
     def play_update(self):
         """Updating game state"""
-        if self.player.lives == 0:
+        if self.map.coins.sum() == 0:
+            self.won = True
+            self.state = "end"
+        elif self.player.lives == 0:
             self.state = "end"
         else:
             self.on_coin()
@@ -243,9 +247,15 @@ class App:
     def end_draw(self):
         """Drawing the end screen"""
         self.screen.fill(BLACK)
-        self.draw_text("YOU DIED",
-                       [WIDTH_BACKGROUND // 2, HEIGHT // 2 - LOGO_TEXT_SIZE],
-                       LOGO_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
+        if self.won:
+            self.draw_text("YOU WON",
+                           [WIDTH_BACKGROUND // 2, HEIGHT // 2 - LOGO_TEXT_SIZE],
+                           LOGO_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
+        else:
+            self.draw_text("YOU DIED",
+                           [WIDTH_BACKGROUND // 2, HEIGHT // 2 - LOGO_TEXT_SIZE],
+                           LOGO_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
+
         self.draw_text("PRESS SPACE TO CLOSE",
                        [WIDTH_BACKGROUND // 2, HEIGHT // 2 + BIG_TEXT_SIZE * 2],
                        BIG_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
