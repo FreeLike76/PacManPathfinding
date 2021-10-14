@@ -1,8 +1,6 @@
-import pygame
 import sys
 import time
-from player import *
-from appSettings import *
+from entities.player import *
 from map import Map
 from search.searchAlgorithms import *
 
@@ -26,6 +24,7 @@ class App:
 
         # entities
         self.player = Player(self, START_POS, PLAYER_COLOR, PLAYER_LIVES)
+
 
         # autopilot search
         self.search_type = "A*"
@@ -109,13 +108,13 @@ class App:
             if event.type == pygame.KEYDOWN:
                 # movement
                 if event.key == pygame.K_LEFT:
-                    self.player.move(pygame.math.Vector2(-1, 0))
+                    self.player.input_direction(pygame.math.Vector2(-1, 0))
                 if event.key == pygame.K_RIGHT:
-                    self.player.move(pygame.math.Vector2(1, 0))
+                    self.player.input_direction(pygame.math.Vector2(1, 0))
                 if event.key == pygame.K_UP:
-                    self.player.move(pygame.math.Vector2(0, -1))
+                    self.player.input_direction(pygame.math.Vector2(0, -1))
                 if event.key == pygame.K_DOWN:
-                    self.player.move(pygame.math.Vector2(0, 1))
+                    self.player.input_direction(pygame.math.Vector2(0, 1))
                 # remove one life
                 if event.key == pygame.K_ESCAPE:
                     self.player.lives -= 1
