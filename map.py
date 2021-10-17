@@ -15,8 +15,6 @@ class Map:
         self.coins = np.random.uniform(0, 1, self.shape)
         self.coins = self.coins < COIN_SPAWN_P
         self.coins[self.walls == 1] = False
-        # to get unbiased score of player's performance during game
-        self.coins_spawned = self.coins.sum()
 
     def _apply_border(self):
         self.walls[0, ::] = 1

@@ -15,8 +15,6 @@ class Player(Entity):
 
         # other
         self.lives = lives
-        self.high_score = 0
-        self.cur_score = 0
 
     def input_direction(self, new_direction):
         """Saves input locations to stored_direction and disables autopilot"""

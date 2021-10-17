@@ -24,32 +24,35 @@ class App:
         # map
         self.map = Map()
 
+        # to get unbiased score of player's performance during game
+        self.coins_spawned = self.map.coins.sum()
+        self.coins_collected = 0
+
         # spawn player
         self.player = Player(self, START_POS, PLAYER_COLOR, PLAYER_LIVES)
-        # spawn enemies, but keep hist to prevent entity overlap
+
+        # spawn enemies
         self.enemies = []
-        spawn_coord = [START_POS]
+        # spawn random enemies
         for i in range(ENEMY_RANDOM):
             while True:
                 # generate x ,y
                 x = np.random.randint(0, self.map.shape[0])
                 y = np.random.randint(0, self.map.shape[1])
-                if self.map.walls[x][y] == 0 and (x, y) not in spawn_coord:
-                    spawn_coord.append((x, y))
+                if self.map.walls[x][y] == 0\
+                        and (x - self.player.grid_pos[0]) + (y - self.player.grid_pos[1]) > 5:
+                    self.enemies.append(Enemy(self, (x, y), MENU_BLUE, "random"))
                     break
-            # spawn enemy_random
-            self.enemies.append(Enemy(self, spawn_coord[-1], MENU_BLUE, "random"))
-
+        # spawn chaser enemies
         for i in range(ENEMY_CHASER):
             while True:
                 # generate x ,y
                 x = np.random.randint(0, self.map.shape[0])
                 y = np.random.randint(0, self.map.shape[1])
-                if self.map.walls[x][y] == 0 and (x, y) not in spawn_coord:
-                    spawn_coord.append((x, y))
+                if self.map.walls[x][y] == 0\
+                        and (x - self.player.grid_pos[0]) + (y - self.player.grid_pos[1]) > 5:
+                    self.enemies.append(Enemy(self, (x, y), RED, "chaser"))
                     break
-            # spawn enemy_chaser
-            self.enemies.append(Enemy(self, spawn_coord[-1], RED, "chaser"))
 
         # autopilot search
         self.search_type = "A*"
@@ -64,11 +67,11 @@ class App:
         self._debug_draw_path = []
 
         # score
-        with open("score.txt", "r") as scoreboard:
-            for line in scoreboard:
-                num = int(line.strip())
-                if int(num) > self.player.high_score:
-                    self.player.high_score = int(num)
+        #with open("score.txt", "r") as scoreboard:
+        #    for line in scoreboard:
+        #        num = int(line.strip())
+        #        if int(num) > self.player.high_score:
+        #            self.player.high_score = int(num)
 
     def run(self):
         """Main game cycle"""
@@ -87,7 +90,7 @@ class App:
                 self.running = False
             self.clock.tick(FPS)
         with open("score.txt", "a") as scoreboard:
-            scoreboard.write(str(self.player.cur_score) + "\n")
+            scoreboard.write(str("SCORES") + "\n")
         pygame.quit()
         sys.exit()
 
@@ -284,7 +287,7 @@ class App:
     def on_coin(self):
         if self.map.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] == 1:
             self.map.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] = 0
-            self.player.cur_score += COIN_VALUE
+            self.coins_collected += 1
 
     def on_enemy(self):
         for enemy in self.enemies:
@@ -368,7 +371,7 @@ class App:
         self.draw_text("HIGH SCORE",
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, 0],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
-        self.draw_text(str(self.player.high_score),
+        self.draw_text(str("HS"),
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE],
                        MID_TEXT_SIZE, YELLOW, DEFAULT_FONT, True, False)
 
@@ -376,7 +379,7 @@ class App:
         self.draw_text("CURRENT SCORE",
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 3],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
-        self.draw_text(str(self.player.cur_score),
+        self.draw_text("{:.2f}%".format(round(self.coins_collected * 100 / self.coins_spawned, 2)),
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE * 4],
                        MID_TEXT_SIZE, YELLOW, DEFAULT_FONT, True, False)
 
