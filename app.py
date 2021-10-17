@@ -69,13 +69,6 @@ class App:
         # saves last path to draw it on screen
         self._debug_draw_path = []
 
-        # score
-        #with open("score.txt", "r") as scoreboard:
-        #    for line in scoreboard:
-        #        num = int(line.strip())
-        #        if int(num) > self.player.high_score:
-        #            self.player.high_score = int(num)
-
     def run(self):
         """Main game cycle"""
         while self.running:
@@ -92,9 +85,6 @@ class App:
             else:
                 self.running = False
             self.clock.tick(FPS)
-        print("PLAY TIME:", time.time() - self.play_time)
-        with open("score.txt", "a") as scoreboard:
-            scoreboard.write(str("SCORES") + "\n")
         pygame.quit()
         sys.exit()
 
@@ -202,8 +192,12 @@ class App:
         if self.map.coins.sum() == 0:
             self.won = True
             self.state = "end"
+            # game stats
+            self.end_stats()
         elif self.player.lives == 0:
             self.state = "end"
+            # game stats
+            self.end_stats()
         else:
             self.on_coin()
             self.on_enemy()
@@ -270,6 +264,13 @@ class App:
                        BIG_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
         self.draw_info()
         pygame.display.update()
+
+    def end_stats(self):
+        with open("score.txt", "a") as scoreboard:
+            scoreboard.write(str(int(self.won)) + ","
+                             + str(self.coins_collected * 100 / self.coins_spawned) + ","
+                             + str(self.player.lives) + ","
+                             + str(time.time() - self.play_time) + "\n")
 
     # SUPPORT FUNCTIONS
 
