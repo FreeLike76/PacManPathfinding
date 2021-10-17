@@ -34,3 +34,13 @@ class Enemy(Entity):
                 if self.app.can_move(self.grid_pos, pos_dirs[next_dir]):
                     self.stored_direction = pos_dirs[next_dir]
                     break
+
+    def respawn(self, x, y):
+        self.grid_pos = pygame.math.Vector2(x, y)
+
+        self.pix_pos = pygame.math.Vector2(self.grid_pos * CELL_PIXEL_SIZE)
+        self.pix_pos.x += CELL_PIXEL_SIZE // 2
+        self.pix_pos.y += CELL_PIXEL_SIZE // 2
+
+        self.direction = pygame.math.Vector2(0, 0)
+        self.stored_direction = pygame.math.Vector2(0, 0)

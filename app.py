@@ -304,11 +304,8 @@ class App:
                     x = np.random.randint(0, self.map.shape[0])
                     y = np.random.randint(0, self.map.shape[1])
                     if self.map.walls[x][y] == 0:
-                        enemy.pix_pos = pygame.math.Vector2(x * CELL_PIXEL_SIZE + 0.5 * CELL_PIXEL_SIZE,
-                                                            y * CELL_PIXEL_SIZE + 0.5 * CELL_PIXEL_SIZE)
-                        enemy.direction = pygame.math.Vector2(0, 0)
-                        enemy.autopilot_has_path = False
-                        return
+                        enemy.respawn(x, y)
+                        break
 
     def draw_text(self, text, pos, size, color, font_name, make_centered_w=False, make_centered_h=False):
         """Helper function to draw text on screen"""
