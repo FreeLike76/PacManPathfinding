@@ -198,6 +198,7 @@ class App:
             self.state = "end"
         else:
             self.on_coin()
+            self.on_enemy()
             # update entities
             self.player.update()
             for enemy in self.enemies:
@@ -284,6 +285,21 @@ class App:
         if self.map.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] == 1:
             self.map.coins[int(self.player.grid_pos[0])][int(self.player.grid_pos[1])] = 0
             self.player.cur_score += COIN_VALUE
+
+    def on_enemy(self):
+        for enemy in self.enemies:
+            if enemy.grid_pos == self.player.grid_pos:
+                self.player.lives -= 1
+                while True:
+                    # generate x ,y
+                    x = np.random.randint(0, self.map.shape[0])
+                    y = np.random.randint(0, self.map.shape[1])
+                    if self.map.walls[x][y] == 0:
+                        enemy.pix_pos = pygame.math.Vector2(x * CELL_PIXEL_SIZE + 0.5 * CELL_PIXEL_SIZE,
+                                                            y * CELL_PIXEL_SIZE + 0.5 * CELL_PIXEL_SIZE)
+                        enemy.direction = pygame.math.Vector2(0, 0)
+                        enemy.autopilot_has_path = False
+                        return
 
     def draw_text(self, text, pos, size, color, font_name, make_centered_w=False, make_centered_h=False):
         """Helper function to draw text on screen"""
@@ -429,7 +445,7 @@ class App:
             pos = pos + dir_
             self._debug_draw_path.append(pos)
 
-    def search(self, start, end, update_stats=True):
+    def search(self, start, end):
         """Search function that calls the selected algorithm"""
         time_start = time.time()
 
@@ -453,7 +469,7 @@ class App:
         time_end = time.time()
         self.search_time = time_end - time_start
 
-        if DEBUG and update_stats:
+        if DEBUG:
             self.path_stats(path)
         return path
 
