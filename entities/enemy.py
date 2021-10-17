@@ -15,11 +15,15 @@ class Enemy(Entity):
     def update_overload_movement(self):
         """Enemy autopilot movement changes"""
         if self.e_type == "chaser":
-            self.stored_direction = A_star(self.app, self.grid_pos, self.app.player.grid_pos,
-                                           _heuristic="Pow2",
-                                           _greedy=True,
-                                           _count_coin=False).pop(0)
-
+            # find path to player
+            path_to_player = A_star(self.app, self.grid_pos, self.app.player.grid_pos,
+                                    _heuristic="Pow2",
+                                    _greedy=True,
+                                    _count_coin=False)
+            # if path is found (not on the same cell, etc.)
+            if len(path_to_player) > 0:
+                # then move towards player
+                self.stored_direction = path_to_player.pop(0)
         elif self.e_type == "random" and self.direction == pygame.math.Vector2(0, 0):
             pos_dirs = [pygame.math.Vector2(-1, 0),
                         pygame.math.Vector2(0, -1),

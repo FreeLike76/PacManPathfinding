@@ -16,6 +16,9 @@ class App:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.clock = pygame.time.Clock()
 
+        # time of game starting
+        self.play_time = None
+
         # state
         self.running = True
         self.won = False
@@ -89,6 +92,7 @@ class App:
             else:
                 self.running = False
             self.clock.tick(FPS)
+        print("PLAY TIME:", time.time() - self.play_time)
         with open("score.txt", "a") as scoreboard:
             scoreboard.write(str("SCORES") + "\n")
         pygame.quit()
@@ -103,6 +107,7 @@ class App:
                 self.running = False
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 self.state = "play"
+                self.play_time = time.time()
 
     def start_draw(self):
         """Drawing the start menu"""
