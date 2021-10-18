@@ -7,4 +7,4 @@ class MMState:
     def __init__(self, entities, active_id):
         self.entities = entities
         self.active_id = active_id
-        self.nextStates = []
+        self.next_states = []

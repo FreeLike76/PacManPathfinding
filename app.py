@@ -1,5 +1,6 @@
 import sys
 import time
+from minimax.mmTree import MMTree
 from entities.player import Player
 from entities.enemy import Enemy
 from map import Map
@@ -60,6 +61,9 @@ class App:
 
         # sync entities
         self.frame = 0
+
+        # MINIMAX
+        self.mm_tree = MMTree(self, self.player, self.enemies, 2)
 
         # autopilot search
         self.search_type = "A*"
@@ -193,24 +197,35 @@ class App:
 
     def play_update(self):
         """Updating game state"""
+        # if won
         if self.map.coins.sum() == 0:
             self.won = True
             self.state = "end"
             # game stats
             self.end_stats()
+        # if lost
         elif self.player.lives == 0:
             self.state = "end"
             # game stats
             self.end_stats()
+        # game
         else:
-
-            # update entities
+            # update entities, if update frame
             if self.play_sync():
-                print("movement change")
+                ##################################################################
+                # IF MINIMAX IS ON
+                    # PLAYER CHOOSE MOVEMENT
+                ##################################################################
+                # update player movement
                 self.player.update()
+                # update enemy movement
                 for enemy in self.enemies:
                     enemy.update()
-            print("pix change")
+                ##################################################################
+                # IF MINIMAX IS ON
+                    # UPDATE ENEMY ACTIVITY STATES AND MAKE TREE DEEPER
+                ##################################################################
+            # update pix pos for smooth animations
             self.player.update_pos()
             for enemy in self.enemies:
                 enemy.update_pos()
