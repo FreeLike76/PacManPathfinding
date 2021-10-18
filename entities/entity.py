@@ -1,8 +1,10 @@
 import pygame
 from appSettings import *
 
+
 class Entity:
     """Player class defines player attributes"""
+
     def __init__(self, app, pos, color):
         """Player initialization"""
         # app
@@ -33,35 +35,22 @@ class Entity:
                                      self.grid_pos[1] * CELL_PIXEL_SIZE,
                                      CELL_PIXEL_SIZE, CELL_PIXEL_SIZE), 1)
 
-    #def draw_path(self):
-    #    # drawing path
-    #    if self.autopilot_type == 1 and self.autopilot_has_path:
-    #        pygame.draw.line(self.app.screen, RED,
-    #                         self.pix_pos,
-    #                         self.app.grid_pos_mouse * CELL_PIXEL_SIZE
-    #                         + pygame.math.Vector2(CELL_PIXEL_SIZE * 0.5,
-    #                                               CELL_PIXEL_SIZE * 0.5))
-
     def update_overload_movement(self):
         """Must be overloaded"""
         pass
 
     def update(self):
         """Defines player movements after human input or during autopilot"""
-        # if centered
-        if self.pix_pos.x % CELL_PIXEL_SIZE == CELL_PIXEL_SIZE // 2 \
-                and self.pix_pos.y % CELL_PIXEL_SIZE == CELL_PIXEL_SIZE // 2:
-
-            # overloaded movement
-            self.update_overload_movement()
-
-            # if can change dir
-            if self.app.can_move(self.grid_pos, self.stored_direction):
-                self.direction = self.stored_direction
-            # if can't move
-            elif not self.app.can_move(self.grid_pos, self.direction):
-                self.direction = pygame.math.Vector2(0, 0)
-
+        # overloaded movement
+        self.update_overload_movement()
+        # if can change dir
+        if self.app.can_move(self.grid_pos, self.stored_direction):
+            self.direction = self.stored_direction
+        # if can't move
+        elif not self.app.can_move(self.grid_pos, self.direction):
+            self.direction = pygame.math.Vector2(0, 0)
         # update grid position using pixel position (for smooth movements)
+        self.grid_pos = self.grid_pos + self.direction
+
+    def update_pos(self):
         self.pix_pos += self.direction
-        self.grid_pos = self.pix_pos // CELL_PIXEL_SIZE

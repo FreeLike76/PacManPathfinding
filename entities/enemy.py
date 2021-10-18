@@ -24,7 +24,10 @@ class Enemy(Entity):
             if len(path_to_player) > 0:
                 # then move towards player
                 self.stored_direction = path_to_player.pop(0)
-        elif self.e_type == "random" and self.direction == pygame.math.Vector2(0, 0):
+        # if enemy-random
+        elif self.e_type == "random" and not self.app.can_move(self.grid_pos, self.direction)\
+                or self.direction == pygame.math.Vector2(0, 0):
+            # possible directions
             pos_dirs = [pygame.math.Vector2(-1, 0),
                         pygame.math.Vector2(0, -1),
                         pygame.math.Vector2(1, 0),

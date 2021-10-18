@@ -11,6 +11,7 @@ pygame.init()
 
 class App:
     """Game class"""
+
     def __init__(self):
         """Game initialization"""
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -42,7 +43,7 @@ class App:
                 # generate x ,y
                 x = np.random.randint(0, self.map.shape[0])
                 y = np.random.randint(0, self.map.shape[1])
-                if self.map.walls[x][y] == 0\
+                if self.map.walls[x][y] == 0 \
                         and (x - self.player.grid_pos[0]) + (y - self.player.grid_pos[1]) > 5:
                     self.enemies.append(Enemy(self, (x, y), MENU_BLUE, "random"))
                     break
@@ -52,10 +53,13 @@ class App:
                 # generate x ,y
                 x = np.random.randint(0, self.map.shape[0])
                 y = np.random.randint(0, self.map.shape[1])
-                if self.map.walls[x][y] == 0\
+                if self.map.walls[x][y] == 0 \
                         and (x - self.player.grid_pos[0]) + (y - self.player.grid_pos[1]) > 5:
                     self.enemies.append(Enemy(self, (x, y), RED, "chaser"))
                     break
+
+        # sync entities
+        self.frame = 0
 
         # autopilot search
         self.search_type = "A*"
@@ -199,12 +203,31 @@ class App:
             # game stats
             self.end_stats()
         else:
+
+            # update entities
+            if self.play_sync():
+                print("movement change")
+                self.player.update()
+                for enemy in self.enemies:
+                    enemy.update()
+            print("pix change")
+            self.player.update_pos()
+            for enemy in self.enemies:
+                enemy.update_pos()
             self.on_coin()
             self.on_enemy()
-            # update entities
-            self.player.update()
-            for enemy in self.enemies:
-                enemy.update()
+
+    def play_sync(self):
+        # new frame
+        self.frame += 1
+        # first frame -> update movemet
+        if self.frame == 1:
+            return True
+        # + 20 frames of pix changes
+        elif self.frame == 20:
+            # restart
+            self.frame = 0
+        return False
 
     def play_draw(self):
         """Drawing the game"""
@@ -230,10 +253,17 @@ class App:
         # draw score/search info
         self.draw_info()
 
-        if DEBUG:
-            self.draw_selected_rmb_targets()
+        # draw selected targets
+        self.draw_selected_rmb_targets()
+
+        if self.player.autopilot_has_path:
             self.draw_player_path()
+
+        if DEBUG:
+            # grids
             self.player.draw_grid()
+            for enemy in self.enemies:
+                enemy.draw_grid()
 
         # apply
         pygame.display.update()
@@ -297,7 +327,8 @@ class App:
 
     def on_enemy(self):
         for enemy in self.enemies:
-            if enemy.grid_pos == self.player.grid_pos:
+            if abs(enemy.pix_pos[0] - self.player.pix_pos[0]) <= 2 * int(CELL_PIXEL_SIZE * 0.4) \
+                    and abs(enemy.pix_pos[1] - self.player.pix_pos[1]) <= 2 * int(CELL_PIXEL_SIZE * 0.4):
                 self.player.lives -= 1
                 while True:
                     # generate x ,y
@@ -344,9 +375,9 @@ class App:
     def draw_player_path(self):
         """Draws autopilot path as circles on grid whenever it is True"""
         if self.player.autopilot_type != 0:
-            color = pygame.Vector3(PLAYER_COLOR[0]//2,
-                                   PLAYER_COLOR[1]//2,
-                                   PLAYER_COLOR[2]//2)
+            color = pygame.Vector3(PLAYER_COLOR[0] // 2,
+                                   PLAYER_COLOR[1] // 2,
+                                   PLAYER_COLOR[2] // 2)
 
             color_step = color // (1.5 * len(self._debug_draw_path))
             for pos in self._debug_draw_path:
@@ -354,7 +385,7 @@ class App:
                                    (pos[0] * CELL_PIXEL_SIZE + CELL_PIXEL_SIZE // 2,
                                     pos[1] * CELL_PIXEL_SIZE + CELL_PIXEL_SIZE // 2),
                                    CELL_PIXEL_SIZE // 2.2, 2)
-                color = color+color_step
+                color = color + color_step
 
     def draw_info(self):
         """Draws the information about game to the right of game map"""
@@ -374,9 +405,9 @@ class App:
         self.draw_text("HIGH SCORE",
                        [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, 0],
                        MID_TEXT_SIZE, WHITE, DEFAULT_FONT, True, False)
-        self.draw_text(str("HS"),
-                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE],
-                       MID_TEXT_SIZE, YELLOW, DEFAULT_FONT, True, False)
+        self.draw_text(str("¯\_(-_-)_/¯"),
+                       [(WIDTH - WIDTH_BACKGROUND) // 2 + WIDTH_BACKGROUND, MID_TEXT_SIZE + 10],
+                       SMALL_TEXT_SIZE, YELLOW, DEFAULT_FONT, True, False)
 
         # cur score
         self.draw_text("CURRENT SCORE",

@@ -1,6 +1,7 @@
 from minimax.mm_entity import MMEntity
 from minimax.mm_state import MMState
 
+
 class MMTree:
     def __init__(self, player, enemies):
         temp_player = MMEntity("P", player.grid_pos, player.direction)
