@@ -212,19 +212,15 @@ class App:
         else:
             # update entities, if update frame
             if self.play_sync():
-                ##################################################################
-                # IF MINIMAX IS ON
-                    # PLAYER CHOOSE MOVEMENT
-                ##################################################################
                 # update player movement
+                self.player.stored_direction = self.mm_tree.best_player_state()
                 self.player.update()
+                self.mm_tree.next_state_by_pos(self.player.grid_pos)
                 # update enemy movement
                 for enemy in self.enemies:
                     enemy.update()
-                ##################################################################
-                # IF MINIMAX IS ON
-                    # UPDATE ENEMY ACTIVITY STATES AND MAKE TREE DEEPER
-                ##################################################################
+                    self.mm_tree.next_state_by_pos(enemy.grid_pos)
+                self.mm_tree.build(self.mm_tree.root)
             # update pix pos for smooth animations
             self.player.update_pos()
             for enemy in self.enemies:

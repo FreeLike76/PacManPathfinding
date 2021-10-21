@@ -8,3 +8,4 @@ class MMState:
         self.entities = entities
         self.active_id = active_id
         self.next_states = []
+        self.score = 0
