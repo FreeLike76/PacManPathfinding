@@ -63,7 +63,7 @@ class App:
         self.frame = 0
 
         # MINIMAX
-        self.mm_tree = MMTree(self, self.player, self.enemies, 2)
+        self.mm_tree = MMTree(self, self.player, self.enemies, 4)
 
         # autopilot search
         self.search_type = "A*"
@@ -348,6 +348,8 @@ class App:
                     if self.map.walls[x][y] == 0:
                         enemy.respawn(x, y)
                         break
+                # new minimax tree
+                self.mm_tree = MMTree(self, self.player, self.enemies, 4)
 
     def draw_text(self, text, pos, size, color, font_name, make_centered_w=False, make_centered_h=False):
         """Helper function to draw text on screen"""

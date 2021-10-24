@@ -21,19 +21,14 @@ class MMTree:
         start_root_entities = [MMEntity("player", player.grid_pos)]
         for enemy in enemies:
             start_root_entities.append(MMEntity(enemy.e_type, enemy.grid_pos, enemy.direction))
-        self.root = MMState(start_root_entities, 0)
+        self.root = MMState(self, start_root_entities, 0)
 
         # init tree
         self.build(self.root)
 
     def build(self, state, cur_depth=0):
-        # IF REACHED THE BOTTOM
-        if cur_depth == self.tree_depth:
-            state.eval()
-            return
-
-        # IF NO CHILDREN
-        if len(state.next_states) == 0:
+        # IF HAVEN'T REACHED THE BOTTOM AND NO CHILDREN STATES
+        if cur_depth != self.tree_depth and len(state.next_states) == 0:
 
             # IF PLAYER IS ACTIVE
             if state.entities[state.active_id].e_type == "player":
@@ -55,12 +50,12 @@ class MMTree:
             elif state.entities[state.active_id].e_type == "chaser":
                 self.add_states_enemy_chaser(state)
 
-        # RECURRENT FOR ALL CHILD-STATES (and update active_id)
-        for next_state in state.next_states:
-            self.build(next_state, cur_depth + 1)
+            # RECURRENT FOR ALL CHILD-STATES (and update active_id)
+            for next_state in state.next_states:
+                self.build(next_state, cur_depth + 1)
 
         # THEN UPDATE SCORE
-        state.score = state.next_states[state.find_max_child_index()].score
+        state.eval()
         return
 
     def add_states_player(self, state):
