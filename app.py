@@ -63,7 +63,8 @@ class App:
         self.frame = 0
 
         # MINIMAX
-        self.mm_tree = MMTree(self, self.player, self.enemies, 4)
+        if MINIMAX_ON:
+            self.mm_tree = MMTree(self, self.player, self.enemies, MINIMAX_TREE_DEPTH)
 
         # autopilot search
         self.search_type = "A*"
@@ -212,15 +213,23 @@ class App:
         else:
             # update entities, if update frame
             if self.play_sync():
-                # update player movement
-                self.player.stored_direction = self.mm_tree.best_player_state()
+                # minimax set player direction
+                if MINIMAX_ON:
+                    self.player.stored_direction = self.mm_tree.best_player_state()
+                # update player
                 self.player.update()
-                self.mm_tree.next_state_by_pos(self.player.grid_pos)
+                # minimax update tree state
+                if MINIMAX_ON:
+                    self.mm_tree.next_state_by_pos(self.player.grid_pos)
                 # update enemy movement
                 for enemy in self.enemies:
                     enemy.update()
-                    self.mm_tree.next_state_by_pos(enemy.grid_pos)
-                self.mm_tree.build(self.mm_tree.root)
+                    # minimax update tree state
+                    if MINIMAX_ON:
+                        self.mm_tree.next_state_by_pos(enemy.grid_pos)
+                # minimax build next states at deeper layers
+                if MINIMAX_ON:
+                    self.mm_tree.build(self.mm_tree.root)
             # update pix pos for smooth animations
             self.player.update_pos()
             for enemy in self.enemies:
@@ -349,7 +358,8 @@ class App:
                         enemy.respawn(x, y)
                         break
                 # new minimax tree
-                self.mm_tree = MMTree(self, self.player, self.enemies, 4)
+                if MINIMAX_ON:
+                    self.mm_tree = MMTree(self, self.player, self.enemies, MINIMAX_TREE_DEPTH)
 
     def draw_text(self, text, pos, size, color, font_name, make_centered_w=False, make_centered_h=False):
         """Helper function to draw text on screen"""

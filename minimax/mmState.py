@@ -20,13 +20,10 @@ class MMState:
         """Evaluate state"""
         # if terminal
         if len(self.next_states) == 0:
-            dist = []
+            self.score = 0
             for i in range(1, len(self.entities)):
-                dist.append(heuristic.pow_dist(self.entities[0].grid_pos, self.entities[i].grid_pos))
-            if len(dist) > 0:
-                dist.sort()
-                self.score = dist[0]
-
+                self.score += min(MINIMAX_MAX_ENEMY_DIST_SCORE,
+                                  heuristic.pow_dist(self.entities[0].grid_pos, self.entities[i].grid_pos))
         else:
             # if enemy-random is active -> expectimax
             if self.entities[self.active_id].e_type == "random":
