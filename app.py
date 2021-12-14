@@ -23,44 +23,16 @@ class App:
         # time of game starting
         self.play_time = None
 
-        # state
-        self.running = True
-        self.won = False
-        self.state = "start"
-
-        # map
-        self.map = Map()
-
-        # to get unbiased score of player's performance during game
-        self.coins_spawned = self.map.coins.sum()
-        self.coins_collected = 0
-
-        # spawn player
-        self.player = Player(self, START_POS, PLAYER_COLOR, PLAYER_LIVES)
-
-        # spawn enemies
-        self.enemies = []
-        # spawn random enemies
-        for i in range(ENEMY_RANDOM):
-            while True:
-                # generate x ,y
-                x = np.random.randint(0, self.map.shape[0])
-                y = np.random.randint(0, self.map.shape[1])
-                if self.map.walls[x][y] == 0 \
-                        and (x - self.player.grid_pos[0]) + (y - self.player.grid_pos[1]) > 5:
-                    self.enemies.append(Enemy(self, (x, y), MENU_BLUE, "random"))
-                    break
-        # spawn chaser enemies
-        for i in range(ENEMY_CHASER):
-            while True:
-                # generate x ,y
-                x = np.random.randint(0, self.map.shape[0])
-                y = np.random.randint(0, self.map.shape[1])
-                if self.map.walls[x][y] == 0 \
-                        and (x - self.player.grid_pos[0]) + (y - self.player.grid_pos[1]) > 5:
-                    self.enemies.append(Enemy(self, (x, y), RED, "chaser"))
-                    break
-
+        # generated on restart
+        self.running = None
+        self.won = None
+        self.state = None
+        self.map = None
+        self.coins_spawned = None
+        self.coins_collected = None
+        self.player = None
+        self.enemies = None
+        self._generate()
 
         # autopilot search
         self.search_type = "A*"
@@ -73,6 +45,45 @@ class App:
         self.grid_pos_mouse4 = []
         # saves last path to draw it on screen
         self._debug_draw_path = []
+
+    def _generate(self):
+        # state
+        self.running = True
+        self.won = False
+        self.state = "start"
+
+        # map
+        self.map = Map()
+
+        # % score of player's performance during game
+        self.coins_spawned = self.map.coins.sum()
+        self.coins_collected = 0
+
+        # spawn player
+        self.player = Player(self, START_POS, PLAYER_COLOR, PLAYER_LIVES)
+
+        # spawn enemies
+        self.enemies = []
+        # spawn enemies-random
+        for i in range(ENEMY_RANDOM):
+            while True:
+                # generate x ,y
+                x = np.random.randint(0, self.map.shape[0])
+                y = np.random.randint(0, self.map.shape[1])
+                if self.map.walls[x][y] == 0 \
+                        and (x - self.player.grid_pos[0]) + (y - self.player.grid_pos[1]) > 5:
+                    self.enemies.append(Enemy(self, (x, y), MENU_BLUE, "random"))
+                    break
+        # spawn enemies-chaser
+        for i in range(ENEMY_CHASER):
+            while True:
+                # generate x ,y
+                x = np.random.randint(0, self.map.shape[0])
+                y = np.random.randint(0, self.map.shape[1])
+                if self.map.walls[x][y] == 0 \
+                        and (x - self.player.grid_pos[0]) + (y - self.player.grid_pos[1]) > 5:
+                    self.enemies.append(Enemy(self, (x, y), RED, "chaser"))
+                    break
 
     def run(self):
         """Main game cycle"""
@@ -87,8 +98,7 @@ class App:
             elif self.state == "end":
                 self.end_events()
                 self.end_draw()
-            else:
-                self.running = False
+            pygame.display.update()
             if LOCK_FPS:
                 self.clock.tick(FPS)
         pygame.quit()
@@ -124,7 +134,6 @@ class App:
                        [WIDTH_BACKGROUND // 2, HEIGHT // 2 + BIG_TEXT_SIZE * 2],
                        BIG_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
         self.draw_info()
-        pygame.display.update()
 
     # PLAY FUNCTIONS
 
@@ -254,9 +263,6 @@ class App:
             for enemy in self.enemies:
                 enemy.draw_grid()
 
-        # apply
-        pygame.display.update()
-
     # END FUNCTIONS
 
     def end_events(self):
@@ -282,7 +288,7 @@ class App:
                        [WIDTH_BACKGROUND // 2, HEIGHT // 2 + BIG_TEXT_SIZE * 2],
                        BIG_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
         self.draw_info()
-        pygame.display.update()
+
 
     def end_stats(self):
         with open("score.txt", "a") as scoreboard:
@@ -316,8 +322,8 @@ class App:
 
     def on_enemy(self):
         for enemy in self.enemies:
-            if abs(enemy.pix_pos[0] - self.player.pix_pos[0]) <= 2 * int(CELL_PIXEL_SIZE * 0.4) \
-                    and abs(enemy.pix_pos[1] - self.player.pix_pos[1]) <= 2 * int(CELL_PIXEL_SIZE * 0.4):
+            if abs(enemy.pix_pos[0] - self.player.pix_pos[0]) <= int(CELL_PIXEL_SIZE * 0.8) \
+                    and abs(enemy.pix_pos[1] - self.player.pix_pos[1]) <= int(CELL_PIXEL_SIZE * 0.8):
                 self.player.lives -= 1
                 while True:
                     # generate x ,y
