@@ -1,6 +1,5 @@
 import sys
 import time
-from minimax.mmTree import MMTree
 from entities.player import Player
 from entities.enemy import Enemy
 from map import Map
@@ -17,6 +16,9 @@ class App:
         """Game initialization"""
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.clock = pygame.time.Clock()
+
+        if GAME_SEED is not None:
+            np.random.seed(GAME_SEED)
 
         # time of game starting
         self.play_time = None
@@ -59,12 +61,6 @@ class App:
                     self.enemies.append(Enemy(self, (x, y), RED, "chaser"))
                     break
 
-        # sync entities
-        self.frame = 0
-
-        # MINIMAX
-        if MINIMAX_ON:
-            self.mm_tree = MMTree(self, self.player, self.enemies, MINIMAX_TREE_DEPTH)
 
         # autopilot search
         self.search_type = "A*"
@@ -93,7 +89,8 @@ class App:
                 self.end_draw()
             else:
                 self.running = False
-            self.clock.tick(FPS)
+            if LOCK_FPS:
+                self.clock.tick(FPS)
         pygame.quit()
         sys.exit()
 
@@ -211,43 +208,15 @@ class App:
             self.end_stats()
         # game
         else:
-            # update entities, if update frame
-            if self.play_sync():
-                # minimax set player direction
-                if MINIMAX_ON:
-                    self.player.stored_direction = self.mm_tree.best_player_state()
-                # update player
-                self.player.update()
-                # minimax update tree state
-                if MINIMAX_ON:
-                    self.mm_tree.next_state_by_pos(self.player.grid_pos)
-                # update enemy movement
-                for enemy in self.enemies:
-                    enemy.update()
-                    # minimax update tree state
-                    if MINIMAX_ON:
-                        self.mm_tree.next_state_by_pos(enemy.grid_pos)
-                # minimax build next states at deeper layers
-                if MINIMAX_ON:
-                    self.mm_tree.build(self.mm_tree.root)
-            # update pix pos for smooth animations
-            self.player.update_pos()
+            # update player
+            self.player.update()
+
+            # update enemy movement
             for enemy in self.enemies:
-                enemy.update_pos()
+                enemy.update()
+
             self.on_coin()
             self.on_enemy()
-
-    def play_sync(self):
-        # new frame
-        self.frame += 1
-        # first frame -> update movemet
-        if self.frame == 1:
-            return True
-        # + 20 frames of pix changes
-        elif self.frame == 20:
-            # restart
-            self.frame = 0
-        return False
 
     def play_draw(self):
         """Drawing the game"""
@@ -357,9 +326,6 @@ class App:
                     if self.map.walls[x][y] == 0:
                         enemy.respawn(x, y)
                         break
-                # new minimax tree
-                if MINIMAX_ON:
-                    self.mm_tree = MMTree(self, self.player, self.enemies, MINIMAX_TREE_DEPTH)
 
     def draw_text(self, text, pos, size, color, font_name, make_centered_w=False, make_centered_h=False):
         """Helper function to draw text on screen"""

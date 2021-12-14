@@ -30,19 +30,21 @@ class Player(Entity):
             self.direction = pygame.math.Vector2(0, 0)
             self.stored_direction = pygame.math.Vector2(0, 0)
 
-            # 1. No path + simple
-            if not self.autopilot_has_path and self.autopilot_type == 1:
-                # find path
-                self.autopilot_direction = self.app.search(self.grid_pos, self.app.grid_pos_mouse)
-                self.autopilot_has_path = True
-            # 2. No path + 4-nods-task
-            if not self.autopilot_has_path and self.autopilot_type == 2:
-                self.autopilot_direction = self.app.search4(self.grid_pos)
-                self.autopilot_has_path = True
-            # 3. No path + all-coins-task
-            if not self.autopilot_has_path and self.autopilot_type == 3:
-                self.autopilot_direction = self.app.search_all(self.grid_pos)
-                self.autopilot_has_path = True
+            # if autopilot has no path
+            if not self.autopilot_has_path:
+                if self.autopilot_type == 1:
+                    # find path
+                    self.autopilot_direction = self.app.search(self.grid_pos, self.app.grid_pos_mouse)
+                    self.autopilot_has_path = True
+                # 2. 4-nods-task
+                if self.autopilot_type == 2:
+                    self.autopilot_direction = self.app.search4(self.grid_pos)
+                    self.autopilot_has_path = True
+                # 3. all-coins-task
+                if self.autopilot_type == 3:
+                    self.autopilot_direction = self.app.search_all(self.grid_pos)
+                    self.autopilot_has_path = True
+
             # follow the path
             if len(self.autopilot_direction) > 0:
                 self.stored_direction = self.autopilot_direction.pop(0)
