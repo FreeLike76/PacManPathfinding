@@ -289,9 +289,13 @@ class App:
     def end_events(self):
         """Managing events during end screen"""
         for event in pygame.event.get():
-            if event.type == pygame.QUIT \
-                    or event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            if event.type == pygame.QUIT:
                 self.running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    self._generate()
+                if event.key == pygame.K_ESCAPE:
+                    self.running = False
 
     def end_draw(self):
         """Drawing the end screen"""
@@ -305,11 +309,13 @@ class App:
                            [WIDTH_BACKGROUND // 2, HEIGHT // 2 - LOGO_TEXT_SIZE],
                            LOGO_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
 
-        self.draw_text("PRESS SPACE TO CLOSE",
+        self.draw_text("PRESS ESC TO CLOSE",
                        [WIDTH_BACKGROUND // 2, HEIGHT // 2 + BIG_TEXT_SIZE * 2],
                        BIG_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
+        self.draw_text("PRESS SPACE TO RESTART",
+                       [WIDTH_BACKGROUND // 2, HEIGHT // 2 + BIG_TEXT_SIZE * 3],
+                       BIG_TEXT_SIZE, MENU_ORANGE, DEFAULT_FONT, True, True)
         self.draw_info()
-
 
     def end_stats(self):
         with open("score.txt", "a") as scoreboard:
