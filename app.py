@@ -27,11 +27,13 @@ class App:
         self.running = None
         self.won = None
         self.state = None
+        self.frame = None
         self.map = None
         self.coins_spawned = None
         self.coins_collected = None
         self.player = None
         self.enemies = None
+
         self._generate()
 
         # autopilot search
@@ -51,6 +53,9 @@ class App:
         self.running = True
         self.won = False
         self.state = "start"
+
+        # sync entities
+        self.frame = 0
 
         # map
         self.map = Map()
@@ -217,15 +222,31 @@ class App:
             self.end_stats()
         # game
         else:
-            # update player
-            self.player.update()
+            if self.play_sync():
+                # update player
+                self.player.update()
+                # update enemy movement
+                for enemy in self.enemies:
+                    enemy.update()
 
-            # update enemy movement
+            self.player.update_pix_pos()
             for enemy in self.enemies:
-                enemy.update()
+                enemy.update_pix_pos()
 
             self.on_coin()
             self.on_enemy()
+
+    def play_sync(self):
+        # new frame
+        self.frame += 1
+        # first frame -> update movemet
+        if self.frame == 1:
+            return True
+        # + 20 frames of pix changes
+        elif self.frame == 20:
+            # restart
+            self.frame = 0
+        return False
 
     def play_draw(self):
         """Drawing the game"""
