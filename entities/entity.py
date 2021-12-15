@@ -41,18 +41,17 @@ class Entity:
 
     def update(self):
         """Defines player movements after human input or during autopilot"""
-        if self.pix_pos.x % CELL_PIXEL_SIZE == CELL_PIXEL_SIZE // 2 \
-                and self.pix_pos.y % CELL_PIXEL_SIZE == CELL_PIXEL_SIZE // 2:
+        self.update_overload_movement()
 
-            # overloaded movement
-            self.update_overload_movement()
+        # if can change dir
+        if self.app.can_move(self.grid_pos, self.stored_direction):
+            self.direction = self.stored_direction
 
-            # if can change dir
-            if self.app.can_move(self.grid_pos, self.stored_direction):
-                self.direction = self.stored_direction
-            # if can't move
-            elif not self.app.can_move(self.grid_pos, self.direction):
-                self.direction = pygame.math.Vector2(0, 0)
+        # if can't move
+        elif not self.app.can_move(self.grid_pos, self.direction):
+            self.direction = pygame.math.Vector2(0, 0)
+        # update grid position using pixel position (for smooth movements)
+        self.grid_pos = self.grid_pos + self.direction
 
+    def update_pix_pos(self):
         self.pix_pos += self.direction
-        self.grid_pos = self.pix_pos // CELL_PIXEL_SIZE
