@@ -16,6 +16,9 @@ class Player(Entity):
         # other
         self.lives = lives
 
+        # console
+        self.god_mode = False
+
     def input_direction(self, new_direction):
         """Saves input locations to stored_direction and disables autopilot"""
         # direction update on player's input

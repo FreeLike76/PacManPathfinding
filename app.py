@@ -54,9 +54,6 @@ class App:
         self.won = False
         self.state = "start"
 
-        # sync entities
-        self.frame = 0
-
         # map
         self.map = Map()
 
@@ -161,6 +158,8 @@ class App:
                 # remove one life
                 if event.key == pygame.K_ESCAPE:
                     self.player.lives -= 1
+                if event.key == pygame.K_BACKQUOTE:
+                    self.console_command()
                 # start search for all coins
                 if event.key == pygame.K_q:
                     self.player.autopilot_type = 3
@@ -222,31 +221,14 @@ class App:
             self.end_stats()
         # game
         else:
-            if self.play_sync():
-                # update player
-                self.player.update()
-                # update enemy movement
-                for enemy in self.enemies:
-                    enemy.update()
-
-            self.player.update_pix_pos()
+            # update player
+            self.player.update()
+            # update enemy movement
             for enemy in self.enemies:
-                enemy.update_pix_pos()
+                enemy.update()
 
             self.on_coin()
             self.on_enemy()
-
-    def play_sync(self):
-        # new frame
-        self.frame += 1
-        # first frame -> update movemet
-        if self.frame == 1:
-            return True
-        # + 20 frames of pix changes
-        elif self.frame == 20:
-            # restart
-            self.frame = 0
-        return False
 
     def play_draw(self):
         """Drawing the game"""
@@ -326,6 +308,35 @@ class App:
 
     # SUPPORT FUNCTIONS
 
+    def console_command(self):
+        pygame.draw.rect(self.screen, RED,
+                         pygame.Rect(0, 0, WIDTH, HEIGHT), 10)
+        pygame.display.update()
+        try:
+            command = input().split()
+
+            if command[0] == "tgm":
+                self.player.god_mode = not self.player.god_mode
+                print("God mode:", self.player.god_mode)
+
+            elif command[0] == "restart":
+                self._generate()
+
+            elif command[0] == "set":
+                if command[1] == "speed":
+                    if command[2] == "player":
+                        self.player.speed = int(command[3])
+                        print("Player speed:", self.player.speed)
+                    elif command[2] == "enemies":
+                        for enemy in self.enemies:
+                            enemy.speed = int(command[3])
+                        print("Enemies speed:", self.enemies[0].speed)
+                elif command[1] == "lives":
+                    self.player.lives = int(command[2])
+                    print("Player lives:", self.player.lives)
+        except:
+            pass
+
     def can_move(self, pos, direction):
         """Checks whether it is possible to move from given position in given direction"""
         if self.map.walls[int(pos[0] + direction[0])][int(pos[1] + direction[1])] == 1:
@@ -351,7 +362,8 @@ class App:
         for enemy in self.enemies:
             if abs(enemy.pix_pos[0] - self.player.pix_pos[0]) <= int(CELL_PIXEL_SIZE * 0.8) \
                     and abs(enemy.pix_pos[1] - self.player.pix_pos[1]) <= int(CELL_PIXEL_SIZE * 0.8):
-                self.player.lives -= 1
+                if not self.player.god_mode:
+                    self.player.lives -= 1
                 while True:
                     # generate x ,y
                     x = np.random.randint(0, self.map.shape[0])

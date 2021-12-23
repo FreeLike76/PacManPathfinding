@@ -21,6 +21,9 @@ class Entity:
         # other
         self.color = color
 
+        # console
+        self.speed = 1
+
     def draw(self):
         """Drawing .self on map"""
         pygame.draw.circle(self.app.screen, self.color,
@@ -41,17 +44,18 @@ class Entity:
 
     def update(self):
         """Defines player movements after human input or during autopilot"""
-        self.update_overload_movement()
+        if self.pix_pos.x % CELL_PIXEL_SIZE == CELL_PIXEL_SIZE // 2 \
+                and self.pix_pos.y % CELL_PIXEL_SIZE == CELL_PIXEL_SIZE // 2:
 
-        # if can change dir
-        if self.app.can_move(self.grid_pos, self.stored_direction):
-            self.direction = self.stored_direction
+            # overloaded movement
+            self.update_overload_movement()
 
-        # if can't move
-        elif not self.app.can_move(self.grid_pos, self.direction):
-            self.direction = pygame.math.Vector2(0, 0)
-        # update grid position using pixel position (for smooth movements)
-        self.grid_pos = self.grid_pos + self.direction
+            # if can change dir
+            if self.app.can_move(self.grid_pos, self.stored_direction):
+                self.direction = self.stored_direction
+            # if can't move
+            elif not self.app.can_move(self.grid_pos, self.direction):
+                self.direction = pygame.math.Vector2(0, 0)
 
-    def update_pix_pos(self):
-        self.pix_pos += self.direction
+        self.pix_pos += self.direction * self.speed
+        self.grid_pos = self.pix_pos // CELL_PIXEL_SIZE
