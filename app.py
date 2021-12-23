@@ -315,12 +315,36 @@ class App:
         try:
             command = input().split()
 
+            if command[0] == "help":
+                print("""
+tgm - toggle god mode
+tcl - toggle player collision
+set speed [target] [value] - multiplies the speed of target
+set lives [value] - sets new # of lives
+game quit - ends game
+game restart - restarts game
+game win - win game
+game lose - lose game
+                """)
+
             if command[0] == "tgm":
                 self.player.god_mode = not self.player.god_mode
                 print("God mode:", self.player.god_mode)
 
-            elif command[0] == "restart":
-                self._generate()
+            elif command[0] == "tcl":
+                self.player.collision = not self.player.collision
+                print("Collision:", self.player.collision)
+
+            elif command[0] == "game":
+                if command[1] == "quit":
+                    self.running = False
+                elif command[1] == "restart":
+                    self._generate()
+                elif command[1] == "win":
+                    self.map.coins.fill(0)
+                    self.coins_collected = self.coins_spawned
+                elif command[1] == "lose":
+                    self.player.lives = 0
 
             elif command[0] == "set":
                 if command[1] == "speed":
@@ -360,7 +384,8 @@ class App:
 
     def on_enemy(self):
         for enemy in self.enemies:
-            if abs(enemy.pix_pos[0] - self.player.pix_pos[0]) <= int(CELL_PIXEL_SIZE * 0.8) \
+            if self.player.collision \
+                    and abs(enemy.pix_pos[0] - self.player.pix_pos[0]) <= int(CELL_PIXEL_SIZE * 0.8) \
                     and abs(enemy.pix_pos[1] - self.player.pix_pos[1]) <= int(CELL_PIXEL_SIZE * 0.8):
                 if not self.player.god_mode:
                     self.player.lives -= 1

@@ -18,6 +18,7 @@ class Player(Entity):
 
         # console
         self.god_mode = False
+        self.collision = True
 
     def input_direction(self, new_direction):
         """Saves input locations to stored_direction and disables autopilot"""
